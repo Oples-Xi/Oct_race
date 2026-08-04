@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "can.h"
+#include "tim.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -28,6 +29,7 @@
 #include "Motor.h"
 #include "stdio.h"
 #include "string.h"
+#include "Servo.h"
 
 /* USER CODE END Includes */
 
@@ -131,17 +133,16 @@ int main(void)
   MX_CAN1_Init();
   MX_USART1_UART_Init();
   MX_UART5_Init();
+  MX_TIM9_Init();
   /* USER CODE BEGIN 2 */
   Motor_Init();
   printf("Motor Init\r\n");
   HAL_Delay(1000);
   Laser_UART_Start();
-  if (HAL_UART_Receive_IT(&huart5, LaserRx, 8) != HAL_OK)
-    Error_Handler();
   HAL_Delay(20);
+  Motor_PID_Init();
   Laser_StartContinuous();
-
- 
+  Motor_SetTargetAngle(4000);
 
   /* USER CODE END 2 */
 
@@ -149,18 +150,14 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    Motor_SetSpeed(500);
+    // Motor_ControlLoop();
+    // printf("%.2f\r\n",Motor1_Feedback.total_angle );
     if (rxReady)
     {
       rxReady = 0;
       Laser_Parse(processBuffer); // 解析激光数据
       printf("%.2f,%.3F\r\n", Motor1_Feedback.total_angle, Laser.Distance_cm); // 打印距离
     }
-    else
-    {
-      continue;
-    }
-    HAL_Delay(100);   // 实时延时，用于打印频率控制
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

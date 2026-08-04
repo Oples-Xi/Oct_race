@@ -1,9 +1,17 @@
 #include "Motor.h"
+#include "pid.h"
 
 CAN_TxHeaderTypeDef CAN1_TxHeader;
 
 extern int16_t torque1;
 Motor_Feedback_t Motor1_Feedback;
+PID_t PositionPID;
+PID_t SpeedPID;
+
+float target_angle=0;
+
+
+
 
 /**
  * @brief 初始化CAN滤波器
@@ -28,6 +36,10 @@ void can_filter_init(void)
     HAL_CAN_ActivateNotification(&hcan1, CAN_IT_RX_FIFO0_MSG_PENDING);
 }
 
+
+
+
+
 /**
  * @brief 初始化CAN发送报文头，主函数只需要调用这个
  * 
@@ -40,6 +52,11 @@ void Motor_Init(void)
     CAN1_TxHeader.DLC = 0x08;
     CAN1_TxHeader.StdId = 0x200;
 }
+
+
+
+
+
 
 /**
  * @brief 设置马达速度
@@ -61,25 +78,9 @@ void Motor_SetSpeed(int16_t speed)
     HAL_CAN_AddTxMessage(&hcan1, &CAN1_TxHeader, TxData, (uint32_t *)CAN_TX_MAILBOX0);
 }
 
-/**
- * @brief 位置PID
- * 
- * @param pid 
- * @return float 
- */
-float Position_PID(PID_t *pid)
-{
-    pid->err = pid->target - pid->feedback;
-    pid->integral += pid->err;
-    float derivative =
-        pid->err - pid->last_err;
-    pid->last_err = pid->err;
-    pid->output =
-        pid->kp * pid->err +
-        pid->ki * pid->integral +
-        pid->kd * derivative;
-    return pid->output;
-}
+
+
+
 
 void Motor_UpdateAngle(Motor_Feedback_t *motor, uint16_t encoder)
 {
@@ -109,4 +110,64 @@ void Motor_UpdateAngle(Motor_Feedback_t *motor, uint16_t encoder)
     motor->last_encoder = encoder;
     motor->total_angle =
         motor->total_encoder * 360.0f / 8192.0f;
+}
+
+
+
+void Motor_PID_Init(void)//还没调！！！！！！！！！！！！！
+{
+    PID_Init(&PositionPID,
+             8.45f,
+             0.05f,
+             0.41f,
+             2000,
+             0);
+
+    PID_Init(&SpeedPID,
+             1.05f,
+             0.00f,
+             0,
+             20000,
+             3000);
+}
+
+
+
+
+void Motor_SetTargetAngle(float angle)
+{
+    target_angle = angle;
+}
+
+
+
+/**
+ * @brief Pid双环控制
+ * 
+ */
+void Motor_ControlLoop(void)
+{
+    /* ----------位置环---------- */
+
+    PositionPID.target =
+        target_angle;
+
+    PositionPID.feedback =
+        Motor1_Feedback.total_angle;
+
+    float target_speed =
+        PID_Calculate(&PositionPID);
+
+    /* ----------速度环---------- */
+
+    SpeedPID.target =
+        target_speed;
+
+    SpeedPID.feedback =
+        Motor1_Feedback.speed;
+
+    int16_t current =
+        (int16_t)PID_Calculate(&SpeedPID);
+
+    Motor_SetSpeed(current);
 }

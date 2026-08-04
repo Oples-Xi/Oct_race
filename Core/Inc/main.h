@@ -57,6 +57,8 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define CangKu_duo_Pin GPIO_PIN_5
+#define CangKu_duo_GPIO_Port GPIOE
 #define PCTx_Pin GPIO_PIN_9
 #define PCTx_GPIO_Port GPIOA
 #define PCRx_Pin GPIO_PIN_10

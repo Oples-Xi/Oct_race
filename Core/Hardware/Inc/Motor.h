@@ -3,6 +3,14 @@
 
 #include "main.h"
 #include "can.h"
+#include "pid.h"
+
+extern PID_t PositionPID;
+extern PID_t SpeedPID;
+
+void Motor_ControlLoop(void);
+
+void Motor_SetTargetAngle(float angle);
 
 /**
  * @brief 马达反馈
@@ -20,27 +28,14 @@ typedef struct
     uint8_t initialized;       // 首次接收标志
 }Motor_Feedback_t;
 
-/**
- * @brief 位置PID（马达）
- * 
- */
-typedef struct
-{
-    float kp;
-    float ki;
-    float kd;
-    float target;
-    float feedback;
-    float err;
-    float last_err;
-    float integral;
-    float output;
-}PID_t;
 
 void can_filter_init(void);
 void Motor_Init(void);
 void Motor_SetSpeed(int16_t speed);
-float Position_PID(PID_t *pid);
 void Motor_UpdateAngle(Motor_Feedback_t *motor, uint16_t encoder);
+void Motor_ControlLoop(void);
+void Motor_SetTargetAngle(float angle);
+void Motor_PID_Init(void);
+
 
 #endif
