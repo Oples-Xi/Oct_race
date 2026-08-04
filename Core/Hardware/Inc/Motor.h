@@ -10,25 +10,15 @@
  */
 typedef struct
 {
-    int16_t angle;      // 角度
-    int16_t speed;      // 速度
-    int16_t torque;     // 扭矩
-    uint8_t temp;       // 温度
-} Motor_Feedback_t;
-
-/**
- * @brief 实现累计角度
- * 
- */
-typedef struct
-{
-    uint16_t encoder;
-    uint16_t last_encoder;
-    int32_t total_encoder;
-    float position_deg;
+    uint16_t encoder;          // 当前编码器值(0~8191)
+    uint16_t last_encoder;     // 上一次编码器值
+    int32_t total_encoder;     // 累计编码器值
+    float total_angle;         // 连续角度(°)
     int16_t speed;
     int16_t torque;
-}Motor_t;
+    uint8_t temp;
+    uint8_t initialized;       // 首次接收标志
+}Motor_Feedback_t;
 
 /**
  * @brief 位置PID（马达）
@@ -49,5 +39,8 @@ typedef struct
 
 void can_filter_init(void);
 void Motor_Init(void);
+void Motor_SetSpeed(int16_t speed);
+float Position_PID(PID_t *pid);
+void Motor_UpdateAngle(Motor_Feedback_t *motor, uint16_t encoder);
 
 #endif

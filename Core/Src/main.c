@@ -59,7 +59,6 @@ uint8_t LaserRx[8];           // 不知道干嘛的，反正有他能跑
 
 //马达函数
 extern Motor_Feedback_t Motor1_Feedback; // 马达反馈
-extern Motor_t motor;
 uint8_t TxData[8] = {0};                 // 发送缓冲区
 int16_t torque1 = 0;                     // 马达1扭矩值
 
@@ -142,21 +141,24 @@ int main(void)
   HAL_Delay(20);
   Laser_StartContinuous();
 
+ 
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+    Motor_SetSpeed(500);
     if (rxReady)
     {
       rxReady = 0;
       Laser_Parse(processBuffer); // 解析激光数据
-      printf("%.3F\r\n", Laser.Distance_cm); // 打印距离
+      printf("%.2f,%.3F\r\n", Motor1_Feedback.total_angle, Laser.Distance_cm); // 打印距离
     }
     else
     {
-      printf("No Data\r\n");
+      continue;
     }
     HAL_Delay(100);   // 实时延时，用于打印频率控制
     /* USER CODE END WHILE */
@@ -240,36 +242,31 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 {
-    CAN_RxHeaderTypeDef RxHeader;
-    uint8_t RxData[8];
+  CAN_RxHeaderTypeDef RxHeader;
+  uint8_t RxData[8];
 
-
-    if(hcan->Instance == CAN1)
+  if (hcan->Instance == CAN1)
+  {
+    if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &RxHeader, RxData) == HAL_OK)
     {
-      if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &RxHeader, RxData) == HAL_OK)
+      // 电机1反馈
+      if (RxHeader.StdId == 0x201)
       {
-        // 电机1反馈
-        if (RxHeader.StdId == 0x201)
-        {
-          Motor1_Feedback.angle = (RxData[0] << 8) | RxData[1];
-          Motor1_Feedback.speed = (RxData[2] << 8) | RxData[3];
-          Motor1_Feedback.torque = (RxData[4] << 8) | RxData[5];
-          Motor1_Feedback.temp = RxData[6];
+        uint16_t encoder =
+            (RxData[0] << 8) | RxData[1];
 
-        }
-        // 电机2反馈
-        // else if(RxHeader.StdId == 0x202)
-        // {
-        //     Motor2_Feedback.angle =
-        //         (RxData[0]<<8)|RxData[1];
-        //     Motor2_Feedback.speed =
-        //         (RxData[2]<<8)|RxData[3];
-        //     Motor2_Feedback.torque =
-        //         (RxData[4]<<8)|RxData[5];
-        //     Motor2_Feedback.temp =
-        //         RxData[6];
-        // }
+        Motor_UpdateAngle(&Motor1_Feedback, encoder);
+
+        Motor1_Feedback.speed =
+            (RxData[2] << 8) | RxData[3];
+
+        Motor1_Feedback.torque =
+            (RxData[4] << 8) | RxData[5];
+
+        Motor1_Feedback.temp =
+            RxData[6];
       }
+    }
     }
 }
 /* USER CODE END 4 */

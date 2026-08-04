@@ -4,7 +4,6 @@ CAN_TxHeaderTypeDef CAN1_TxHeader;
 
 extern int16_t torque1;
 Motor_Feedback_t Motor1_Feedback;
-Motor_t motor;
 
 /**
  * @brief 初始化CAN滤波器
@@ -27,11 +26,6 @@ void can_filter_init(void)
     HAL_CAN_ConfigFilter(&hcan1, &can_filter_st);
     HAL_CAN_Start(&hcan1);
     HAL_CAN_ActivateNotification(&hcan1, CAN_IT_RX_FIFO0_MSG_PENDING);
-    //========can2==========
-    // can_filter_st.FilterBank = 14;
-    // HAL_CAN_ConfigFilter(&hcan2, &can_filter_st);
-    // HAL_CAN_Start(&hcan2);
-    // HAL_CAN_ActivateNotification(&hcan2, CAN_IT_RX_FIFO0_MSG_PENDING);
 }
 
 /**
@@ -52,7 +46,7 @@ void Motor_Init(void)
  * 
  * @param speed
  */
-void Set_Speed(int16_t speed)
+void Motor_SetSpeed(int16_t speed)
 {
     torque1 = speed;
     uint8_t TxData[8] = {0};
@@ -85,4 +79,34 @@ float Position_PID(PID_t *pid)
         pid->ki * pid->integral +
         pid->kd * derivative;
     return pid->output;
+}
+
+void Motor_UpdateAngle(Motor_Feedback_t *motor, uint16_t encoder)
+{
+    motor->encoder = encoder;
+    /* 第一次收到数据 */
+    if(motor->initialized == 0)
+    {
+        motor->initialized = 1;
+        motor->last_encoder = encoder;
+        motor->total_encoder = encoder;
+        motor->total_angle =
+            encoder * 360.0f / 8192.0f;
+        return;
+    }
+    int16_t diff = encoder - motor->last_encoder;
+    /* 正向跨越8191->0 */
+    if(diff < -4096)
+    {
+        diff += 8192;
+    }
+    /* 反向跨越0->8191 */
+    else if(diff > 4096)
+    {
+        diff -= 8192;
+    }
+    motor->total_encoder += diff;
+    motor->last_encoder = encoder;
+    motor->total_angle =
+        motor->total_encoder * 360.0f / 8192.0f;
 }
