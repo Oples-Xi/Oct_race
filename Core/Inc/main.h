@@ -57,6 +57,14 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define CeJuTx_Pin GPIO_PIN_0
+#define CeJuTx_GPIO_Port GPIOA
+#define CeJuRx_Pin GPIO_PIN_1
+#define CeJuRx_GPIO_Port GPIOA
+#define PCTx_Pin GPIO_PIN_9
+#define PCTx_GPIO_Port GPIOA
+#define PCRx_Pin GPIO_PIN_10
+#define PCRx_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
 

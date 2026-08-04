@@ -18,10 +18,15 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "can.h"
+#include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "laser.h"
+#include "stdio.h"
+#include "string.h"
 
 /* USER CODE END Includes */
 
@@ -43,18 +48,42 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+uint8_t LaserRx[8];
+volatile uint8_t rxReady = 0;
+uint8_t rxBuffer[8];          // 中断接收缓冲区
+uint8_t processBuffer[8];     // 主循环处理缓冲区
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-
+extern Laser_Data_t Laser;
+extern void Laser_Parse(uint8_t *buf);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+#ifdef __cplusplus
+extern "C" {
+#endif
+int fputc(int ch, FILE *f)
+{
+  HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, 0xFFFF);
+  return (ch);
+}
+#ifdef __cplusplus
+}
+#endif
 
+ void ShowHex(uint8_t *buf,uint8_t len)
+{
+    uint8_t i;
+    printf("hex = ");
+    for( i = 0; i < len; i++){
+      printf(" %02X", buf[i]);
+    }
+    printf( "\r\n");
+}
 /* USER CODE END 0 */
 
 /**
@@ -86,7 +115,13 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_CAN1_Init();
+  MX_UART4_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
+	Laser_UART_Start();
+	HAL_Delay(20);
+	Laser_StartContinuous();
 
   /* USER CODE END 2 */
 
