@@ -25,6 +25,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "laser.h"
+#include "Motor.h"
 #include "stdio.h"
 #include "string.h"
 
@@ -48,10 +49,20 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uint8_t LaserRx[8];
-volatile uint8_t rxReady = 0;
-uint8_t rxBuffer[8];          // �жϽ��ջ�����
-uint8_t processBuffer[8];     // ��ѭ������������
+//uint8_t LaserRx[8];
+
+//测距函数
+volatile uint8_t rxReady = 0; //接收完成标志
+uint8_t rxBuffer[8];          //接收缓冲区
+uint8_t processBuffer[8];     //处理缓冲区
+uint8_t LaserRx[8];           // 不知道干嘛的，反正有他能跑
+
+//马达函数
+extern Motor_Feedback_t Motor1_Feedback; // 马达反馈
+extern Motor_t motor;
+uint8_t TxData[8] = {0};                 // 发送缓冲区
+int16_t torque1 = 0;                     // 马达1扭矩值
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -63,6 +74,8 @@ extern void Laser_Parse(uint8_t *buf);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+//串口重定向（别的地方般的，非常之好用）
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -84,6 +97,7 @@ int fputc(int ch, FILE *f)
     }
     printf( "\r\n");
 }
+
 /* USER CODE END 0 */
 
 /**
@@ -116,12 +130,17 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_CAN1_Init();
-  MX_UART4_Init();
   MX_USART1_UART_Init();
+  MX_UART5_Init();
   /* USER CODE BEGIN 2 */
-	Laser_UART_Start();
-	HAL_Delay(20);
-	Laser_StartContinuous();
+  Motor_Init();
+  printf("Motor Init\r\n");
+  HAL_Delay(1000);
+  Laser_UART_Start();
+  if (HAL_UART_Receive_IT(&huart5, LaserRx, 8) != HAL_OK)
+    Error_Handler();
+  HAL_Delay(20);
+  Laser_StartContinuous();
 
   /* USER CODE END 2 */
 
@@ -129,6 +148,17 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+    if (rxReady)
+    {
+      rxReady = 0;
+      Laser_Parse(processBuffer); // 解析激光数据
+      printf("%.3F\r\n", Laser.Distance_cm); // 打印距离
+    }
+    else
+    {
+      printf("No Data\r\n");
+    }
+    HAL_Delay(100);   // 实时延时，用于打印频率控制
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -183,7 +213,65 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+    if (huart == &huart5) {
+        /* 清除所有错误标志（关键） */
+        if (huart->ErrorCode != HAL_UART_ERROR_NONE) {
+            __HAL_UART_CLEAR_FLAG(huart, UART_FLAG_ORE);   // 溢出
+            __HAL_UART_CLEAR_FLAG(huart, UART_FLAG_FE);    // 帧错误
+            __HAL_UART_CLEAR_FLAG(huart, UART_FLAG_NE);    // 噪声
+            // 读取数据寄存器以复位
+            (void)huart->Instance->DR;
+            huart->ErrorCode = HAL_UART_ERROR_NONE;
+        }
 
+        /* 拷贝数据并置标志 */
+        memcpy(processBuffer, LaserRx, 8);
+        rxReady = 1;
+
+        /* 重新启动接收（务必检查返回值） */
+        if (HAL_UART_Receive_IT(&huart5, LaserRx, 8) != HAL_OK) {
+            // 若启动失败，尝试重新初始化UART或进入错误处理
+            Error_Handler();
+        }
+    }
+}
+
+void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
+{
+    CAN_RxHeaderTypeDef RxHeader;
+    uint8_t RxData[8];
+
+
+    if(hcan->Instance == CAN1)
+    {
+      if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &RxHeader, RxData) == HAL_OK)
+      {
+        // 电机1反馈
+        if (RxHeader.StdId == 0x201)
+        {
+          Motor1_Feedback.angle = (RxData[0] << 8) | RxData[1];
+          Motor1_Feedback.speed = (RxData[2] << 8) | RxData[3];
+          Motor1_Feedback.torque = (RxData[4] << 8) | RxData[5];
+          Motor1_Feedback.temp = RxData[6];
+
+        }
+        // 电机2反馈
+        // else if(RxHeader.StdId == 0x202)
+        // {
+        //     Motor2_Feedback.angle =
+        //         (RxData[0]<<8)|RxData[1];
+        //     Motor2_Feedback.speed =
+        //         (RxData[2]<<8)|RxData[3];
+        //     Motor2_Feedback.torque =
+        //         (RxData[4]<<8)|RxData[5];
+        //     Motor2_Feedback.temp =
+        //         RxData[6];
+        // }
+      }
+    }
+}
 /* USER CODE END 4 */
 
 /**
