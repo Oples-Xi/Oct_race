@@ -340,7 +340,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F407xx</Define>
               <Undefine></Undefine>
-              <IncludePath>../Core/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32F4xx/Include;../Drivers/CMSIS/Include;..\Hardware\Inc</IncludePath>
+              <IncludePath>../Core/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32F4xx/Include;../Drivers/CMSIS/Include;..\Core\Hardware\Inc</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -726,12 +726,12 @@
             <File>
               <FileName>Laser.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\Hardware\Laser.c</FilePath>
+              <FilePath>..\Core\Hardware\Laser.c</FilePath>
             </File>
             <File>
               <FileName>Motor.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\Hardware\Motor.c</FilePath>
+              <FilePath>..\Core\Hardware\Motor.c</FilePath>
             </File>
           </Files>
         </Group>
