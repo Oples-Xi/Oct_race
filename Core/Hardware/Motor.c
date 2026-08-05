@@ -117,9 +117,9 @@ void Motor_UpdateAngle(Motor_Feedback_t *motor, uint16_t encoder)
 void Motor_PID_Init(void)//还没调！！！！！！！！！！！！！
 {
     PID_Init(&PositionPID,
-             8.45f,
-             0.05f,
-             0.41f,
+             7.00f,
+             0.0f,
+             0.61f,
              2000,
              0);
 

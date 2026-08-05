@@ -4,11 +4,11 @@
 
 Laser_Data_t Laser;
 
-extern uint8_t processBuffer[8];
+extern uint8_t LaserRx[8];
 
 void Laser_UART_Start(void)
 {
-    HAL_UART_Receive_IT(&huart5, processBuffer, 8);
+    HAL_UART_Receive_IT(&huart5, LaserRx, 8);
 }
 
 static uint8_t BCC(uint8_t *buf,uint8_t len)

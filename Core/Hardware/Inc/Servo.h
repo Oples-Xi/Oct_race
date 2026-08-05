@@ -5,6 +5,8 @@
 #include "tim.h"
 #include "stdlib.h"
 
+
+
 void dipan_duo_init(void);
 void Set_dipan_Duo(int angle);
 

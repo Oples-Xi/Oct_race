@@ -1,5 +1,16 @@
 #include "Servo.h"
 
+
+const int HoleAngle[6] =
+{
+    0,      // 0号货物
+    30,      // 1号货物
+    60,      // 2号货物
+    90,     // 3号货物
+    120,     // 4号货物
+    180      // 5号货物
+};
+
 void Set_dipan_Duo(int angle)
 {
     if(angle>180)

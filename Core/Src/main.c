@@ -56,8 +56,7 @@
 //测距函数
 volatile uint8_t rxReady = 0; //接收完成标志
 uint8_t rxBuffer[8];          //接收缓冲区
-uint8_t processBuffer[8];     //处理缓冲区
-uint8_t LaserRx[8];           // 不知道干嘛的，反正有他能跑
+uint8_t LaserRx[8];           // 处理缓冲区
 
 //马达函数
 extern Motor_Feedback_t Motor1_Feedback; // 马达反馈
@@ -69,8 +68,8 @@ int16_t torque1 = 0;                     // 马达1扭矩值
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-extern Laser_Data_t Laser;
-extern void Laser_Parse(uint8_t *buf);
+extern Laser_Data_t Laser; //测距结构体
+//extern void Laser_Parse(uint8_t *buf);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -89,6 +88,9 @@ int fputc(int ch, FILE *f)
 }
 #endif
 
+/**
+*@brief 16进制打印，用于串口监控内存
+*/
  void ShowHex(uint8_t *buf,uint8_t len)
 {
     uint8_t i;
@@ -134,7 +136,9 @@ int main(void)
   MX_USART1_UART_Init();
   MX_UART5_Init();
   MX_TIM9_Init();
+  MX_TIM5_Init();
   /* USER CODE BEGIN 2 */
+  HAL_TIM_Base_Start_IT(&htim5);
   Motor_Init();
   printf("Motor Init\r\n");
   HAL_Delay(1000);
@@ -143,20 +147,26 @@ int main(void)
   Motor_PID_Init();
   Laser_StartContinuous();
   Motor_SetTargetAngle(4000);
-
+  if (HAL_UART_Receive_IT(&huart5, LaserRx, 8) != HAL_OK)
+  {
+    printf("Receive IT Start Failed!\n");
+  }
+  else
+  {
+    printf("Receive IT Start Success!\n");
+  }
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    // Motor_ControlLoop();
-    // printf("%.2f\r\n",Motor1_Feedback.total_angle );
     if (rxReady)
     {
       rxReady = 0;
-      Laser_Parse(processBuffer); // 解析激光数据
-      printf("%.2f,%.3F\r\n", Motor1_Feedback.total_angle, Laser.Distance_cm); // 打印距离
+      Laser_Parse(LaserRx); // 解析激光数据
+      printf("%.3F\r\n", Laser.Distance_cm); // 打印距离
+      //Motor_ControlLoop();
     }
     /* USER CODE END WHILE */
 
@@ -216,17 +226,12 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
     if (huart == &huart5) {
         /* 清除所有错误标志（关键） */
-        if (huart->ErrorCode != HAL_UART_ERROR_NONE) {
-            __HAL_UART_CLEAR_FLAG(huart, UART_FLAG_ORE);   // 溢出
-            __HAL_UART_CLEAR_FLAG(huart, UART_FLAG_FE);    // 帧错误
-            __HAL_UART_CLEAR_FLAG(huart, UART_FLAG_NE);    // 噪声
-            // 读取数据寄存器以复位
+        if (huart->ErrorCode != HAL_UART_ERROR_NONE) 
+        {
             (void)huart->Instance->DR;
             huart->ErrorCode = HAL_UART_ERROR_NONE;
         }
-
         /* 拷贝数据并置标志 */
-        memcpy(processBuffer, LaserRx, 8);
         rxReady = 1;
 
         /* 重新启动接收（务必检查返回值） */
@@ -265,6 +270,12 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
       }
     }
     }
+}
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  if(htim==&htim5)
+    Motor_ControlLoop();
 }
 /* USER CODE END 4 */
 
