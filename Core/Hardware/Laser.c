@@ -1,6 +1,7 @@
 #include "laser.h"
 #include "usart.h"
 #include "stdio.h"
+#include "Kalman.h"
 
 Laser_Data_t Laser;
 
@@ -91,6 +92,7 @@ void Laser_Stop(void)
  */
 void Laser_Parse(uint8_t *buf)
 {
+	float distance;
 
     if(buf[0]!=0xB4)
     {
@@ -127,6 +129,9 @@ void Laser_Parse(uint8_t *buf)
         ((uint32_t)buf[4] << 16) |
         ((uint32_t)buf[5] << 8)  |
         ((uint32_t)buf[6]);
+		
+		distance = Laser.Distance / 100.0f;
 
-    Laser.Distance_cm = Laser.Distance / 100.0f; // 转换为厘米
+    Laser.Distance_cm = KalmanFilter1(distance,0.001,0.15); // 转换为厘米
+		//Laser.Distance_cm =Laser.Distance / 100.0f;
 }

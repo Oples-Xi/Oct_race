@@ -19,5 +19,6 @@ typedef enum
 
 }SystemState_t;
 
+void System_StateMachine(void);
 
 #endif
