@@ -59,6 +59,12 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define CangKu_duo_Pin GPIO_PIN_5
 #define CangKu_duo_GPIO_Port GPIOE
+#define fangxing_Duo_Pin GPIO_PIN_6
+#define fangxing_Duo_GPIO_Port GPIOE
+#define tjc_Tx_Pin GPIO_PIN_2
+#define tjc_Tx_GPIO_Port GPIOA
+#define tjc_Rx_Pin GPIO_PIN_3
+#define tjc_Rx_GPIO_Port GPIOA
 #define PCTx_Pin GPIO_PIN_9
 #define PCTx_GPIO_Port GPIOA
 #define PCRx_Pin GPIO_PIN_10

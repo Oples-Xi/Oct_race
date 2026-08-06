@@ -8,7 +8,10 @@
 
 
 void dipan_duo_init(void);
-void Set_dipan_Duo(int angle);
+void Set_dipan_duo(int angle);
+void fangxin_duo_init(void);
+void Set_fangxin_duo(int angle);
+
 
 
 #endif

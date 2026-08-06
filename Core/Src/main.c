@@ -30,6 +30,7 @@
 #include "stdio.h"
 #include "string.h"
 #include "Servo.h"
+#include "tjc_usart_hmi.h"
 
 /* USER CODE END Includes */
 
@@ -137,8 +138,11 @@ int main(void)
   MX_UART5_Init();
   MX_TIM9_Init();
   MX_TIM5_Init();
+  MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start_IT(&htim5);
+  fangxin_duo_init();
+  dipan_duo_init();
   Motor_Init();
   printf("Motor Init\r\n");
   HAL_Delay(1000);
@@ -224,7 +228,8 @@ void SystemClock_Config(void)
 /* USER CODE BEGIN 4 */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-    if (huart == &huart5) {
+    if (huart == &huart5) //测距串口
+    {
         /* 清除所有错误标志（关键） */
         if (huart->ErrorCode != HAL_UART_ERROR_NONE) 
         {
@@ -240,6 +245,13 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
             Error_Handler();
         }
     }
+
+    if (huart->Instance == TJC_UART_INS) // 屏幕串口
+    {
+      write1ByteToRingBuffer(RxBuffer[0]);
+      HAL_UART_Receive_IT(&TJC_UART, RxBuffer, 1); // 重新使能串口2接收中断
+    }
+    return;
 }
 
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
