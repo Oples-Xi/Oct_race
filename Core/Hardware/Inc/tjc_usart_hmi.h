@@ -10,6 +10,7 @@
 
 
 
+
 #define TJC_UART huart2
 #define TJC_UART_INS USART2
 extern UART_HandleTypeDef huart2;
@@ -30,6 +31,16 @@ uint8_t read1ByteFromRingBuffer(uint16_t position);
 
 
 #define RINGBUFFER_LEN	(500)     //定义最大接收字节数 500
+
+
+typedef struct
+{
+    uint16_t Head;
+    uint16_t Tail;
+    uint16_t Length;
+    uint8_t  Ring_data[RINGBUFFER_LEN];
+}RingBuffer_t;
+
 
 #define usize getRingBufferLength()
 #define code_c() initRingBuffer()

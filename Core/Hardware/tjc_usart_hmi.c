@@ -15,18 +15,8 @@
 
 
 
-
-
-typedef struct
-{
-    uint16_t Head;
-    uint16_t Tail;
-    uint16_t Length;
-    uint8_t  Ring_data[RINGBUFFER_LEN];
-}RingBuffer_t;
-
 RingBuffer_t ringBuffer;	//创建一个ringBuffer的缓冲区
-uint8_t RxBuffer[1];
+uint8_t tjc_RxBuffer[1];
 
 
 /********************************************************
