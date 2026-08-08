@@ -198,22 +198,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    // if(Laser.Distance_cm>15 && flag==0)
-    // {
-    //   printf("%.2f\r\n", Angle);
-    //   Angle+=50;  
-    //   Motor_SetTargetAngle(Angle);
-    // }
-    // if(Laser.Distance_cm<=15 && flag!=1)
-    // {
-    //   Angle = Motor1_Feedback.total_angle;
-    //   Motor_SetTargetAngle(Angle);
-    //   flag = 1;
-    //   printf("%.2f\r\n",Laser.Distance_cm);
-    // }
-    //printf("%.2f , %d\r\n", Laser.Distance_cm, Motor1_Feedback.total_angle);
-      printf("%.3F,", Laser.Distance_cm); // 打印距离
-      //     printf("%.2f\r\n",Motor1_Feedback.total_angle);
+    System_StateMachine();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

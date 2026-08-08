@@ -20,17 +20,23 @@ extern Motor_Feedback_t Motor1_Feedback; // 马达反馈
 uint8_t command[50];
 int commandLength = 0;
 
-uint8_t UpperReady = 0;
+//分类变量
+uint8_t color;//颜色
+uint8_t shape;//形状
 
+//伪代码替代变量
+uint8_t UpperReady = 0;
 uint8_t PhotoSensor = 0;
-SystemState_t SystemState;//状态机
-GoodsInfo GoodsTable[MAX_GOODS_TYPE];//马格南盘分类结构体
+
+
+
+SystemState_t SystemState;//状态机结构体
+GoodsSlot GoodsTable[MAX_GOODS_TYPE];//马格南盘分类结构体
+int tik = 0;//计时
 
 extern float Angle;//main中马达角度
 extern int flag;//main中标志位
-
-int tik = 0;
-
+extern const int HoleAngle[];
 
 /**
  * @brief  轮盘分类记录初始化
@@ -40,7 +46,8 @@ void GoodsTable_Init(void)
 {
     for(int i=0;i<MAX_GOODS_TYPE;i++)
     {
-        GoodsTable[i].valid = 0;
+        GoodsTable[i].used = 0;
+        GoodsTable[i].count = 0;
     }
 }
 
@@ -53,17 +60,42 @@ void GoodsTable_Init(void)
  */
 int Goods_Find(uint8_t color,uint8_t shape)
 {
+
     for(int i=0;i<MAX_GOODS_TYPE;i++)
     {
-        if(GoodsTable[i].valid)
+        if(GoodsTable[i].used)
         {
-            if (GoodsTable[i].color == color && GoodsTable[i].shape == shape)
+            if(GoodsTable[i].color == color &&
+               GoodsTable[i].shape == shape)
             {
-                return GoodsTable[i].slot;
+                return i;
             }
         }
     }
+    return -1;
+}
 
+/**
+ * @brief 新货物自动编号
+ * 
+ * @param color 
+ * @param shape 
+ * @return int 
+ */
+int Goods_Add(uint8_t color,uint8_t shape)
+{
+
+    for(int i=0;i<MAX_GOODS_TYPE;i++)
+    {
+        if(GoodsTable[i].used == 0)
+        {
+            GoodsTable[i].color = color;
+            GoodsTable[i].shape = shape;
+            GoodsTable[i].count = 1;
+            GoodsTable[i].used = 1;
+            return i;
+        }
+    }
     return -1;
 }
 
@@ -75,8 +107,7 @@ void System_StateMachine(void)
 {
     switch(SystemState)
     {
-
-    case STATE_RELEASE_ONE://放行一个货物
+        case STATE_RELEASE_ONE://放行一个货物
         Set_fangxin_duo(90); //舵机放行
 
         if (!isHuoIn() && HAL_GetTick() - tik < 5000) // 没经过传感器
@@ -97,11 +128,13 @@ void System_StateMachine(void)
             SystemState =
                 STATE_WAIT_DISTANCE;
         }
-
         break;
 
-    case STATE_WAIT_DISTANCE:/* 等待距离到15cm*/
-        if(Laser.Distance_cm>15.0f && flag==0)
+        /**
+         * 定位到检测区
+         */
+        case STATE_WAIT_DISTANCE:
+        if(Laser.Distance_cm>15.0f && flag==0)/* 等待距离到15cm*/
         {
             printf("%.2f\r\n", Angle);
             Angle += 50;
@@ -115,110 +148,50 @@ void System_StateMachine(void)
             printf("Ready\r\n"); // 发信息给上位机
             SystemState = STATE_WAIT_CLASS;
         }
-
         break;
 
-    case STATE_WAIT_CLASS:/*等待YOLO分类*/
-        commandLength = Command_GetCommand(command);
-        if (commandLength != 0)
+        /*
+        *分类
+        */
+        case STATE_WAIT_CLASS:
         {
-            HAL_UART_Transmit(&huart2, command, commandLength, HAL_MAX_DELAY);
-            for (int i = 2; i < commandLength - 1; i += 2)//解包
+            commandLength = Command_GetCommand(command);
+            if (commandLength != 0)
             {
-                //第一位数据
-                if (command[i] == 0x00)
+                HAL_UART_Transmit(&huart2, command, commandLength, HAL_MAX_DELAY);
+                uint8_t color = command[2];
+                uint8_t shape = command[3];
+                // 查找是否已经存在
+                int slot = Goods_Find(color, shape);
+                // 第一次识别该货物
+                if (slot == -1)
                 {
-                    //红色
+                    slot = Goods_Add(color, shape);
                 }
-                else if (command[i] == 0x01)
+                if (slot != -1)
                 {
-                    //橙色
-                }
-                else if (command[i] == 0x02)
-                {
-                    //黄色
-                }
-                else if (command[i] == 0x03)
-                {
-                    //蓝色
-                }
-                else if (command[i] == 0x04)
-                {
-                    //绿色
-                }
-                else if (command[i] == 0x05)
-                {
-                    //黑色
-                }
-                else if (command[i] == 0x06)
-                {
-                    //白色
-                }
-                else if (command[i] == 0x07)
-                {
-                    //紫色
-                }
-
-                //第二位数据
-                if (command[i + 1] == 0x00)
-                {
-                    //正方体
-                }
-                else if (command[i + 1] == 0x01)
-                {
-                    //五棱柱
-                }
-                else if (command[i + 1] == 0x02)
-                {
-                    //四棱锥
-                }
-                else if (command[i + 1] == 0x03)
-                {
-                    //三棱锥
-                }
-                else if (command[i + 1] == 0x04)
-                {
-                    //圆柱体
-                }
-                else if (command[i + 1] == 0x05)
-                {
-                    //四棱柱
-                }
-                else if (command[i + 1] == 0x06)
-                {
-                    //球
+                    GoodsTable[slot].count++;
+                    printf("Color:%d Shape:%d Slot:%d \r\n", color, shape, slot);
+                    Set_dipan_duo(HoleAngle[slot]);// 转到对应马格南仓位
+                    SystemState = STATE_WAIT_PHOTO;
                 }
             }
+            break;
         }
 
-            if (UpperReady)
-            {
-                UpperReady = 0;
-
-                // 马格南盘转动Magazine_GotoType(GoodsType);
-
-                Motor_SetSpeed(1200);
-
-                SystemState =
-                    STATE_WAIT_PHOTO;
-            }
-
-            break;
-
+        /**
+         * 检测进洞
+         */
         case STATE_WAIT_PHOTO:
-
-            /**********************
-             * 光电检测
-             **********************/
-
-            if (PhotoSensor)
-            {
-                Motor_SetSpeed(0);
-
-                SystemState =
-                    STATE_RELEASE_ONE;
-            }
-
-            break;
+        if (!isHuoOut())
+        {
+            Angle += 50;
+            Motor_SetTargetAngle(Angle);//一直转
         }
+        if(isHuoOut())
+        {
+            SystemState =STATE_RELEASE_ONE;
+        }
+        break;
+    }
 }

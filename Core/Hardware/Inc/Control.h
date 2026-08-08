@@ -12,12 +12,14 @@
  */
 typedef struct
 {
-    uint8_t color;
-    uint8_t shape;
-    uint8_t slot;       //对应马格南盘仓位
-    uint8_t valid;
+    uint8_t color;      // 颜色
+    uint8_t shape;      // 形状
+    uint8_t count;      // 数量
+    uint8_t slot;       // 对应马格南盘仓位
+    uint8_t used;       // 是否已经分配仓位
 
-}GoodsInfo;
+}GoodsSlot;
+
 
 
 /**
@@ -40,6 +42,7 @@ typedef enum
 
 void GoodsTable_Init(void);
 int Goods_Find(uint8_t color, uint8_t shape);
+int Goods_Add(uint8_t color, uint8_t shape);
 void System_StateMachine(void);
 
 #endif
