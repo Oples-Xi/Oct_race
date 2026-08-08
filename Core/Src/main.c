@@ -32,7 +32,7 @@
 #include "Servo.h"
 #include "tjc_usart_hmi.h"
 #include "In.h"
-
+#include "command.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -53,28 +53,38 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-//uint8_t LaserRx[8];
+
 int test=0;//测试专用变量
+int flag = 0; //标志位
 
 //测距变量
-volatile uint8_t rxReady = 0; //接收完成标志
-uint8_t rxBuffer[8];          //接收缓冲区
-uint8_t LaserRx[8];           // 处理缓冲区
+volatile uint8_t rxReady = 0; //测距接收完成标志
+uint8_t rxBuffer[8];          //测距接收缓冲区
+uint8_t LaserRx[8];           // 测距处理缓冲区
+extern Laser_Data_t Laser; //测距结构体
 
 //马达变量
 extern Motor_Feedback_t Motor1_Feedback; // 马达反馈
-uint8_t TxData[8] = {0};                 // 发送缓冲区
+uint8_t TxData[8] = {0};                 // can发送缓冲区
 int16_t torque1 = 0;                     // 马达1扭矩值
+float Angle = 0;                     // 马达角度值
 
 //串口屏变量
-extern RingBuffer_t ringBuffer;	//创建一个ringBuffer的缓冲区
-extern uint8_t tjc_RxBuffer[1];
+extern RingBuffer_t ringBuffer;	//创建一个ringBuffer的屏幕串口缓冲区
+extern uint8_t tjc_RxBuffer[1];//屏幕串口接收命令位
+
+//状态机变量
+extern int tik;//状态机计时
+
+//上位机接收变量
+uint8_t readBuffer[10];//上位机接收缓存
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-extern Laser_Data_t Laser; //测距结构体
+
 //extern void Laser_Parse(uint8_t *buf);
 /* USER CODE END PFP */
 
@@ -105,6 +115,20 @@ int fputc(int ch, FILE *f)
       printf(" %02X", buf[i]);
     }
     printf( "\r\n");
+}
+
+/**
+ * @brief  串口接收空闲回调函数
+ * 
+ * @param huart 
+ * @param Size 
+ */
+void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
+	if (huart == &huart1)
+  {
+		Command_Write(readBuffer, Size);
+		HAL_UARTEx_ReceiveToIdle_IT(&huart2, readBuffer, sizeof(readBuffer));
+	}
 }
 
 /* USER CODE END 0 */
@@ -164,29 +188,32 @@ int main(void)
   {
     printf("Receive IT Start Success!\n");
   }
+  Laser.Distance_cm = 100;
+  tik = HAL_GetTick();
+  HAL_UARTEx_ReceiveToIdle_IT(&huart2, readBuffer, sizeof(readBuffer));
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-		if(isHuoIn())
-		{
-			test++;
-			printf("Pass%d\r\n",test);
-		}
-    if(isHuoOut())
-		{
-			test++;
-			printf("Out%d\r\n",test);
-		}
-    else if (rxReady)
-    {
-      rxReady = 0;
-      Laser_Parse(LaserRx); // 解析激光数据
+    // if(Laser.Distance_cm>15 && flag==0)
+    // {
+    //   printf("%.2f\r\n", Angle);
+    //   Angle+=50;  
+    //   Motor_SetTargetAngle(Angle);
+    // }
+    // if(Laser.Distance_cm<=15 && flag!=1)
+    // {
+    //   Angle = Motor1_Feedback.total_angle;
+    //   Motor_SetTargetAngle(Angle);
+    //   flag = 1;
+    //   printf("%.2f\r\n",Laser.Distance_cm);
+    // }
+    //printf("%.2f , %d\r\n", Laser.Distance_cm, Motor1_Feedback.total_angle);
       printf("%.3F,", Laser.Distance_cm); // 打印距离
-          printf("%.2f\r\n",Motor1_Feedback.total_angle);
-    }
+      //     printf("%.2f\r\n",Motor1_Feedback.total_angle);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -251,8 +278,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
             (void)huart->Instance->DR;
             huart->ErrorCode = HAL_UART_ERROR_NONE;
         }
-        /* 拷贝数据并置标志 */
-        rxReady = 1;
+        Laser_Parse(LaserRx); // 解析激光数据
 
         /* 重新启动接收（务必检查返回值） */
         if (HAL_UART_Receive_IT(&huart5, LaserRx, 8) != HAL_OK) {
@@ -261,11 +287,12 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
         }
     }
 
-    if (huart->Instance == TJC_UART_INS) // 屏幕串口
+    if (huart ==&huart2) // 屏幕串口
     {
       write1ByteToRingBuffer(tjc_RxBuffer[0]);
       HAL_UART_Receive_IT(&TJC_UART, tjc_RxBuffer, 1); // 重新使能串口2接收中断
     }
+
     return;
 }
 

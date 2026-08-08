@@ -130,8 +130,7 @@ void Laser_Parse(uint8_t *buf)
         ((uint32_t)buf[5] << 8)  |
         ((uint32_t)buf[6]);
 		
-		distance = Laser.Distance / 100.0f;
-
-    Laser.Distance_cm = KalmanFilter1(distance,0.001,0.15); // 转换为厘米
-		//Laser.Distance_cm =Laser.Distance / 100.0f;
+		//distance = Laser.Distance / 100.0f;
+        //Laser.Distance_cm = KalmanFilter1(distance,0.01,0.15); // 转换为厘米
+		Laser.Distance_cm =Laser.Distance / 100.0f;
 }

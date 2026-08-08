@@ -3,6 +3,23 @@
 
 #include "main.h"
 
+
+#define MAX_GOODS_TYPE 6
+
+/**
+ * @brief 马格南盘分类结构体
+ * 
+ */
+typedef struct
+{
+    uint8_t color;
+    uint8_t shape;
+    uint8_t slot;       //对应马格南盘仓位
+    uint8_t valid;
+
+}GoodsInfo;
+
+
 /**
  * @brief 状态枚举
  * 
@@ -19,6 +36,10 @@ typedef enum
 
 }SystemState_t;
 
+
+
+void GoodsTable_Init(void);
+int Goods_Find(uint8_t color, uint8_t shape);
 void System_StateMachine(void);
 
 #endif
