@@ -33,6 +33,7 @@
 #include "tjc_usart_hmi.h"
 #include "In.h"
 #include "command.h"
+#include "Control.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -75,6 +76,7 @@ extern uint8_t tjc_RxBuffer[1];//屏幕串口接收命令位
 
 //状态机变量
 extern int tik;//状态机计时
+extern SystemState_t SystemState;
 
 //上位机接收变量
 uint8_t readBuffer[10];//上位机接收缓存
@@ -182,11 +184,11 @@ int main(void)
   Motor_SetTargetAngle(5000);
   if (HAL_UART_Receive_IT(&huart5, LaserRx, 8) != HAL_OK)
   {
-    printf("Receive IT Start Failed!\n");
+    //good! 表扬你！
   }
   else
   {
-    printf("Receive IT Start Success!\n");
+    HAL_UART_Receive_IT(&huart5, LaserRx, 8);
   }
   Laser.Distance_cm = 100;
   tik = HAL_GetTick();
@@ -198,6 +200,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+    //printf("%.2f\r\n",  Laser.Distance_cm);
     System_StateMachine();
     /* USER CODE END WHILE */
 

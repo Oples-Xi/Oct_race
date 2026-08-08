@@ -28,15 +28,15 @@ uint8_t shape;//形状
 uint8_t UpperReady = 0;
 uint8_t PhotoSensor = 0;
 
-
-
-SystemState_t SystemState;//状态机结构体
+SystemState_t SystemState =STATE_RELEASE_ONE;//状态机结构体
 GoodsSlot GoodsTable[MAX_GOODS_TYPE];//马格南盘分类结构体
 int tik = 0;//计时
 
 extern float Angle;//main中马达角度
 extern int flag;//main中标志位
 extern const int HoleAngle[];
+
+extern uint8_t LaserRx[8];
 
 /**
  * @brief  轮盘分类记录初始化
@@ -108,35 +108,50 @@ void System_StateMachine(void)
     switch(SystemState)
     {
         case STATE_RELEASE_ONE://放行一个货物
-        Set_fangxin_duo(90); //舵机放行
+            //printf("one");
+            if (HAL_GetTick() - tik < 5000)
+                Set_fangxin_duo(90); // 舵机放行
 
-        if (!isHuoIn() && HAL_GetTick() - tik < 5000) // 没经过传感器
+            if (!isHuoIn() && HAL_GetTick() - tik < 5000) // 没经过传感器
+            {
+                Angle += 50;
+                Motor_SetTargetAngle(Angle); // 一直转
+            }
+            
+            if(isHuoIn())
+            {
+                Set_fangxin_duo(0); // 舵机复位
+                flag = 0;
+                SystemState =
+                    STATE_WAIT_DISTANCE;
+            }
+
+         if (!isHuoIn() && HAL_GetTick() - tik > 5000) // 5s还没经过传感器
         {
-            Angle += 50;
-            Motor_SetTargetAngle(Angle);//一直转
+            if(HAL_GetTick() - tik < 7000)
+            {
+                Set_fangxin_duo(0); // 舵机复位
+            }
+            if(HAL_GetTick() - tik > 7000)
+            {
+                Set_fangxin_duo(90); // 舵机放行
+                tik = HAL_GetTick(); // 重新计时
+            }
         }
-        else if (!isHuoIn() && HAL_GetTick() - tik > 5000) // 5s还没经过传感器
-        {
-            Set_fangxin_duo(0); //舵机复位
-            HAL_Delay(1000);
-            Set_fangxin_duo(90); //舵机放行
-            tik = HAL_GetTick();//重新计时
-        }
-        else
-        {
-            Set_fangxin_duo(0); //舵机复位
-            SystemState =
-                STATE_WAIT_DISTANCE;
-        }
+        
         break;
 
         /**
          * 定位到检测区
          */
         case STATE_WAIT_DISTANCE:
+        if(Laser.Distance_cm==100.0f)//测距模块可能接收失败，于是重新接收
+        {
+            HAL_UART_Receive_IT(&huart5, LaserRx, 8);
+        }
         if(Laser.Distance_cm>15.0f && flag==0)/* 等待距离到15cm*/
         {
-            printf("%.2f\r\n", Angle);
+            //printf("%.2f\r\n", Angle);
             Angle += 50;
             Motor_SetTargetAngle(Angle);
         }
@@ -155,6 +170,7 @@ void System_StateMachine(void)
         */
         case STATE_WAIT_CLASS:
         {
+            printf("waiting");
             commandLength = Command_GetCommand(command);
             if (commandLength != 0)
             {
