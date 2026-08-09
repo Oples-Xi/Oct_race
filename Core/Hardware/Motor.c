@@ -133,7 +133,11 @@ void Motor_PID_Init(void)//还没调！！！！！！！！！！！！！
 
 
 
-
+/**
+ * @brief 设置目标角度
+ * 
+ * @param angle 角度
+ */
 void Motor_SetTargetAngle(float angle)
 {
     target_angle = angle;

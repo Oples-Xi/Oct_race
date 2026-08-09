@@ -5,14 +5,14 @@
 
 
 /**
- * @brief ????
+ * @brief 测距结构体
  * 
  */
 typedef struct
 {
-    uint32_t Distance;/*!<??*/
-    float Distance_cm;/*!<????*/
-    uint8_t  FuncCode;/*!<???*/
+    uint32_t Distance;/*!<毫米距离*/
+    float Distance_cm;/*!<厘米距离*/
+    uint8_t  FuncCode;/*!<功能码*/
     uint8_t  Error;/*Error*/
 }Laser_Data_t;
 

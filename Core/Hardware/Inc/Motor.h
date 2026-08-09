@@ -21,7 +21,7 @@ typedef struct
     uint16_t encoder;          // 当前编码器值(0~8191)
     uint16_t last_encoder;     // 上一次编码器值
     int32_t total_encoder;     // 累计编码器值
-    float total_angle;         // 连续角度(°)
+    double total_angle;         // 连续角度(°)
     int16_t speed;
     int16_t torque;
     uint8_t temp;

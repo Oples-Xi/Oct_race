@@ -68,7 +68,7 @@ extern Laser_Data_t Laser; //测距结构体
 extern Motor_Feedback_t Motor1_Feedback; // 马达反馈
 uint8_t TxData[8] = {0};                 // can发送缓冲区
 int16_t torque1 = 0;                     // 马达1扭矩值
-float Angle = 0;                     // 马达角度值
+double Angle = 0;                     // 马达角度值
 
 //串口屏变量
 extern RingBuffer_t ringBuffer;	//创建一个ringBuffer的屏幕串口缓冲区
@@ -128,8 +128,12 @@ int fputc(int ch, FILE *f)
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
 	if (huart == &huart1)
   {
+    //调试用
+    //printf("RX Size:%d\r\n",Size);
+    //ShowHex(readBuffer,Size);
+
 		Command_Write(readBuffer, Size);
-		HAL_UARTEx_ReceiveToIdle_IT(&huart2, readBuffer, sizeof(readBuffer));
+		HAL_UARTEx_ReceiveToIdle_IT(&huart1, readBuffer, sizeof(readBuffer));
 	}
 }
 
@@ -192,16 +196,21 @@ int main(void)
   }
   Laser.Distance_cm = 100;
   tik = HAL_GetTick();
-  HAL_UARTEx_ReceiveToIdle_IT(&huart2, readBuffer, sizeof(readBuffer));
-
+  HAL_UARTEx_ReceiveToIdle_IT(&huart1, readBuffer, sizeof(readBuffer));
+  Set_dipan_duo(270);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    //printf("%.2f\r\n",  Laser.Distance_cm);
-    System_StateMachine();
+        System_StateMachine();
+
+
+        //调试的时候用串口监控的数据
+    //printf("%.2f\r\n",  Motor1_Feedback.total_angle);//马达角度
+    //printf("%.2f\r\n", Laser.Distance_cm);
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

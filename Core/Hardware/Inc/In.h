@@ -8,4 +8,6 @@ uint8_t  isHuoIn(void);
 
 uint8_t  isHuoOut(void);
 
+uint8_t isCunIn(void);
+
 #endif

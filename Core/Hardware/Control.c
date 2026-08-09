@@ -25,8 +25,11 @@ uint8_t color;//颜色
 uint8_t shape;//形状
 
 //伪代码替代变量
-uint8_t UpperReady = 0;
-uint8_t PhotoSensor = 0;
+//uint8_t UpperReady = 0;
+//uint8_t PhotoSensor = 0;
+
+//放行标志位
+int fang = 0;
 
 SystemState_t SystemState =STATE_RELEASE_ONE;//状态机结构体
 GoodsSlot GoodsTable[MAX_GOODS_TYPE];//马格南盘分类结构体
@@ -109,34 +112,40 @@ void System_StateMachine(void)
     {
         case STATE_RELEASE_ONE://放行一个货物
             //printf("one");
-            if (HAL_GetTick() - tik < 5000)
+            if (isCunIn() && fang == 0) // 有存货且没放行过
+            {
+                tik = HAL_GetTick();
                 Set_fangxin_duo(90); // 舵机放行
+                fang = 1;
+            }
 
             if (!isHuoIn() && HAL_GetTick() - tik < 5000) // 没经过传感器
             {
-                Angle += 50;
+                Angle += 1;
                 Motor_SetTargetAngle(Angle); // 一直转
             }
-            
-            if(isHuoIn())
+
+            if (isHuoIn() && fang == 1)
             {
                 Set_fangxin_duo(0); // 舵机复位
                 flag = 0;
+                fang = 0;
                 SystemState =
                     STATE_WAIT_DISTANCE;
             }
 
-         if (!isHuoIn() && HAL_GetTick() - tik > 5000) // 5s还没经过传感器
-        {
-            if(HAL_GetTick() - tik < 7000)
+            if (!isHuoIn() && HAL_GetTick() - tik > 5000 && fang == 1) // 放行后5s还没经过传感器
             {
-                Set_fangxin_duo(0); // 舵机复位
-            }
-            if(HAL_GetTick() - tik > 7000)
-            {
-                Set_fangxin_duo(90); // 舵机放行
-                tik = HAL_GetTick(); // 重新计时
-            }
+                if (HAL_GetTick() - tik < 7000)
+                {
+                    Set_fangxin_duo(0); // 舵机复位
+                    
+                }
+                if (HAL_GetTick() - tik > 7000)
+                {
+                    fang = 0;
+                    //tik = HAL_GetTick(); // 重新计时
+                }
         }
         
         break;
@@ -145,10 +154,11 @@ void System_StateMachine(void)
          * 定位到检测区
          */
         case STATE_WAIT_DISTANCE:
-        if(Laser.Distance_cm==100.0f)//测距模块可能接收失败，于是重新接收
-        {
-            HAL_UART_Receive_IT(&huart5, LaserRx, 8);
-        }
+            
+            if (Laser.Distance_cm == 100.0f) // 测距模块可能接收失败，于是重新接收
+            {
+                HAL_UART_Receive_IT(&huart5, LaserRx, 8);
+            }
         if(Laser.Distance_cm>15.0f && flag==0)/* 等待距离到15cm*/
         {
             //printf("%.2f\r\n", Angle);
@@ -170,10 +180,11 @@ void System_StateMachine(void)
         */
         case STATE_WAIT_CLASS:
         {
-            printf("waiting");
+            //printf("waiting");
             commandLength = Command_GetCommand(command);
             if (commandLength != 0)
             {
+                //printf("okay\n");
                 HAL_UART_Transmit(&huart2, command, commandLength, HAL_MAX_DELAY);
                 uint8_t color = command[2];
                 uint8_t shape = command[3];
@@ -187,7 +198,7 @@ void System_StateMachine(void)
                 if (slot != -1)
                 {
                     GoodsTable[slot].count++;
-                    printf("Color:%d Shape:%d Slot:%d \r\n", color, shape, slot);
+                    //printf("Color:%d Shape:%d Slot:%d \r\n", color, shape, slot);
                     Set_dipan_duo(HoleAngle[slot]);// 转到对应马格南仓位
                     SystemState = STATE_WAIT_PHOTO;
                 }
@@ -206,6 +217,10 @@ void System_StateMachine(void)
         }
         if(isHuoOut())
         {
+            //printf("1");//测试用
+            flag = 0;
+            fang = 0;
+            tik = HAL_GetTick();
             SystemState =STATE_RELEASE_ONE;
         }
         break;

@@ -7,6 +7,11 @@ Laser_Data_t Laser;
 
 extern uint8_t LaserRx[8];
 
+
+/**
+ * @brief 串口重接收
+ * 
+ */
 void Laser_UART_Start(void)
 {
     HAL_UART_Receive_IT(&huart5, LaserRx, 8);
@@ -92,17 +97,18 @@ void Laser_Stop(void)
  */
 void Laser_Parse(uint8_t *buf)
 {
-	float distance;
 
     if(buf[0]!=0xB4)
     {
         printf("Head1 Err\r\n");
+        //HAL_UART_Receive_IT(&huart5, LaserRx, 8);
         return;
     }
 
     if(buf[1]!=0x69)
     {
         printf("Head2 Err\r\n");
+        //HAL_UART_Receive_IT(&huart5, LaserRx, 8);
         return;
     }
 
@@ -110,6 +116,7 @@ void Laser_Parse(uint8_t *buf)
     {
         printf("BCC Err Calc=%02X Recv=%02X\r\n",
                 BCC(buf,7), buf[7]);
+                //HAL_UART_Receive_IT(&huart5, LaserRx, 8);
         return;
     }
 
