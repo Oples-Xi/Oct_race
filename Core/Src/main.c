@@ -174,6 +174,7 @@ int main(void)
   MX_TIM9_Init();
   MX_TIM5_Init();
   MX_USART2_UART_Init();
+  MX_TIM12_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start_IT(&htim5);
   fangxin_duo_init();

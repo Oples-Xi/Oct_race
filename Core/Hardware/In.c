@@ -114,45 +114,29 @@ uint8_t  isHuoOut(void)
  * 
  * @return 1 - 是；0 - 否
  */
-uint8_t  isCunIn(void)
+uint8_t isCunIn(void)
 {
- static uint8_t state = 0;      // 0=释放态, 1=按下态
+    static uint8_t stable_state = 0;
     static uint8_t count = 0;
-    uint8_t pin_status = IS_CUN(); // 1=物理按下(低电平)
 
-    if (state == 0)  // ---------- 释放状态 ----------
+    uint8_t pin_status = IS_CUN();  // 1=有货，0=无货
+
+
+    if(pin_status != stable_state)
     {
-        if (pin_status)  // 检测到低电平（按下）
+        count++;
+
+        if(count >= KEY_DEBOUNCE_COUNT)
         {
-            count++;
-            if (count >= KEY_DEBOUNCE_COUNT)
-            {
-                state = 1;      // 切换为按下状态
-                count = 0;
-                return 1;       // ✅ 只有这里返回1，仅代表“按下动作”
-            }
-        }
-        else
-        {
-            count = 0;          // 未按下，清零
+            stable_state = pin_status;
+            count = 0;
         }
     }
-    else  // ---------- 按下状态 ----------
+    else
     {
-        if (!pin_status)  // 检测到高电平（松开）
-        {
-            count++;
-            if (count >= KEY_DEBOUNCE_COUNT) // 释放去抖完成
-            {
-                state = 0;      // 切回释放状态
-                count = 0;
-                // ⚠️ 注意：这里故意不返回任何值，松开绝无触发！
-            }
-        }
-        else
-        {
-            count = 0;          // 按下期间抖动，清零
-        }
+        count = 0;
     }
-    return 0;
+
+
+    return stable_state;
 }

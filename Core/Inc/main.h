@@ -59,8 +59,8 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define CangKu_duo_Pin GPIO_PIN_5
 #define CangKu_duo_GPIO_Port GPIOE
-#define Fangxing_duo_Pin GPIO_PIN_6
-#define Fangxing_duo_GPIO_Port GPIOE
+#define Fangxin1_duo_Pin GPIO_PIN_6
+#define Fangxin1_duo_GPIO_Port GPIOE
 #define tjc_Tx_Pin GPIO_PIN_2
 #define tjc_Tx_GPIO_Port GPIOA
 #define tjc_Rx_Pin GPIO_PIN_3
@@ -71,6 +71,8 @@ void Error_Handler(void);
 #define luoxia_In_GPIO_Port GPIOA
 #define cunhuo_In_Pin GPIO_PIN_4
 #define cunhuo_In_GPIO_Port GPIOC
+#define fangxin2_duo_Pin GPIO_PIN_14
+#define fangxin2_duo_GPIO_Port GPIOB
 #define PCTx_Pin GPIO_PIN_9
 #define PCTx_GPIO_Port GPIOA
 #define PCRx_Pin GPIO_PIN_10

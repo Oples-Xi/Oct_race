@@ -111,7 +111,7 @@ void System_StateMachine(void)
     switch(SystemState)
     {
         case STATE_RELEASE_ONE://放行一个货物
-            //printf("one");
+
             if (isCunIn() && fang == 0) // 有存货且没放行过
             {
                 tik = HAL_GetTick();
@@ -123,15 +123,6 @@ void System_StateMachine(void)
             {
                 Angle += 1;
                 Motor_SetTargetAngle(Angle); // 一直转
-            }
-
-            if (isHuoIn() && fang == 1)
-            {
-                Set_fangxin_duo(0); // 舵机复位
-                flag = 0;
-                fang = 0;
-                SystemState =
-                    STATE_WAIT_DISTANCE;
             }
 
             if (!isHuoIn() && HAL_GetTick() - tik > 5000 && fang == 1) // 放行后5s还没经过传感器
@@ -146,7 +137,16 @@ void System_StateMachine(void)
                     fang = 0;
                     //tik = HAL_GetTick(); // 重新计时
                 }
-        }
+            }
+
+            if (isHuoIn() && fang == 1)
+            {
+                Set_fangxin_duo(0); // 舵机复位
+                flag = 0;
+                fang = 0;
+                SystemState =
+                    STATE_WAIT_DISTANCE;
+            }
         
         break;
 
