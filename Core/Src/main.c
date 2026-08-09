@@ -125,7 +125,8 @@ int fputc(int ch, FILE *f)
  * @param huart 
  * @param Size 
  */
-void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
+void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
+{
 	if (huart == &huart1)
   {
     //调试用
@@ -180,7 +181,7 @@ int main(void)
   fangxin_duo_init();
   dipan_duo_init();
   Motor_Init();
-  printf("Motor Init\r\n");
+  //printf("Motor Init\r\n");
   HAL_Delay(1000);
   Laser_UART_Start();
   HAL_Delay(20);

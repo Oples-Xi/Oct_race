@@ -7,6 +7,7 @@
 #include "command.h"
 #include "main.h"
 #include "usart.h"
+#include "screen.h"
 
 extern Laser_Data_t Laser; //测距结构体
 extern Motor_Feedback_t Motor1_Feedback; // 马达反馈
@@ -135,7 +136,6 @@ void System_StateMachine(void)
                 if (HAL_GetTick() - tik > 7000)
                 {
                     fang = 0;
-                    //tik = HAL_GetTick(); // 重新计时
                 }
             }
 
@@ -170,6 +170,7 @@ void System_StateMachine(void)
             Angle = Motor1_Feedback.total_angle;
             Motor_SetTargetAngle(Angle);
             flag = 1;
+            HAL_Delay(1000);//等停稳  //为什么用hal_delay?因为我懒
             printf("Ready\r\n"); // 发信息给上位机
             SystemState = STATE_WAIT_CLASS;
         }
@@ -180,11 +181,9 @@ void System_StateMachine(void)
         */
         case STATE_WAIT_CLASS:
         {
-            //printf("waiting");
             commandLength = Command_GetCommand(command);
             if (commandLength != 0)
             {
-                //printf("okay\n");
                 HAL_UART_Transmit(&huart2, command, commandLength, HAL_MAX_DELAY);
                 uint8_t color = command[2];
                 uint8_t shape = command[3];
@@ -199,6 +198,7 @@ void System_StateMachine(void)
                 {
                     GoodsTable[slot].count++;
                     //printf("Color:%d Shape:%d Slot:%d \r\n", color, shape, slot);
+                    Display_Goods(slot);
                     Set_dipan_duo(HoleAngle[slot]);// 转到对应马格南仓位
                     SystemState = STATE_WAIT_PHOTO;
                 }
