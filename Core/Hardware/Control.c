@@ -32,7 +32,7 @@ uint8_t shape;//形状
 //放行标志位
 int fang = 0;
 
-SystemState_t SystemState =STATE_RELEASE_ONE;//状态机结构体
+SystemState_t SystemState =STATE_WAIT_DISTANCE;//状态机结构体
 GoodsSlot GoodsTable[MAX_GOODS_TYPE];//马格南盘分类结构体
 int tik = 0;//计时
 
@@ -170,7 +170,9 @@ void System_StateMachine(void)
             Angle = Motor1_Feedback.total_angle;
             Motor_SetTargetAngle(Angle);
             flag = 1;
-            HAL_Delay(1000);//等停稳  //为什么用hal_delay?因为我懒
+            Motor1_Feedback.total_angle = 0;
+            HAL_Delay(1000);//等停稳  
+            //为什么用hal_delay?因为我懒
             printf("Ready\r\n"); // 发信息给上位机
             SystemState = STATE_WAIT_CLASS;
         }
@@ -184,7 +186,7 @@ void System_StateMachine(void)
             commandLength = Command_GetCommand(command);
             if (commandLength != 0)
             {
-                HAL_UART_Transmit(&huart2, command, commandLength, HAL_MAX_DELAY);
+                //2HAL_UART_Transmit(&huart2, command, commandLength, HAL_MAX_DELAY);
                 uint8_t color = command[2];
                 uint8_t shape = command[3];
                 // 查找是否已经存在
@@ -200,7 +202,8 @@ void System_StateMachine(void)
                     //printf("Color:%d Shape:%d Slot:%d \r\n", color, shape, slot);
                     Display_Goods(slot);
                     Set_dipan_duo(HoleAngle[slot]);// 转到对应马格南仓位
-                    SystemState = STATE_WAIT_PHOTO;
+                    flag = 0;
+                    SystemState = STATE_WAIT_DISTANCE;
                 }
             }
             break;

@@ -100,42 +100,43 @@ void Display_Goods(uint8_t slot)
     {
         case 0:
             tjc_send_txt("t0", "txt", text);
-            tjc_send_val("n0", "val", GoodsTable[slot].count);
-            printf("%s,%d", text, GoodsTable[slot].count);
+            tjc_send_val("n0", "val", GoodsTable[slot].count - 1);
+            //printf("%s,%d", text, GoodsTable[slot].count - 1);
             break;
 
         case 1:
             tjc_send_txt("t1", "txt", text);
-            tjc_send_val("n1", "val", GoodsTable[slot].count);
-            printf("%s,%d", text, GoodsTable[slot].count);
+            tjc_send_val("n1", "val", GoodsTable[slot].count - 1);
+            //printf("%s,%d", text, GoodsTable[slot].count - 1);
 
             break;
 
         case 2:
             tjc_send_txt("t2", "txt", text);
-            tjc_send_val("n2", "val", GoodsTable[slot].count);
-                        printf("%s,%d", text, GoodsTable[slot].count);
+            tjc_send_val("n2", "val", GoodsTable[slot].count - 1);
+            //printf("%s,%d", text, GoodsTable[slot].count - 1);
 
             break;
 
+            
         case 3:
             tjc_send_txt("t3", "txt", text);
-            tjc_send_val("n3", "val", GoodsTable[slot].count);
-                        printf("%s,%d", text, GoodsTable[slot].count);
+            tjc_send_val("n3", "val", GoodsTable[slot].count - 1);
+            //printf("%s,%d", text, GoodsTable[slot].count - 1);
 
             break;
 
         case 4:
             tjc_send_txt("t4", "txt", text);
-            tjc_send_val("n4", "val", GoodsTable[slot].count);
-                        printf("%s,%d", text, GoodsTable[slot].count);
+            tjc_send_val("n4", "val", GoodsTable[slot].count - 1);
+            //printf("%s,%d", text, GoodsTable[slot].count - 1);
 
             break;
 
         case 5:
             tjc_send_txt("t5", "txt", text);
-            tjc_send_val("n5", "val", GoodsTable[slot].count);
-                        printf("%s,%d", text, GoodsTable[slot].count);
+            tjc_send_val("n5", "val", GoodsTable[slot].count - 1);
+            //printf("%s,%d", text, GoodsTable[slot].count - 1);
 
             break;
     }

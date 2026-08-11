@@ -202,9 +202,6 @@ int main(void)
   tik = HAL_GetTick();
   HAL_UARTEx_ReceiveToIdle_IT(&huart1, readBuffer, sizeof(readBuffer));
   Set_dipan_duo(270);
-  tjc_send_txt("t1", "txt", "n");
-  for (int i = 0; i < 6;i++)
-    printf("%d", GoodsTable[i].count);
   /* USER CODE END 2 */
 
   /* Infinite loop */

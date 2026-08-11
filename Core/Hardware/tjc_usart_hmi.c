@@ -79,9 +79,9 @@ void uart_send_char(char ch)
 	uint8_t ch2 = (uint8_t)ch;
     //当串口0忙的时候等待，不忙的时候再发送传进来的字符
 	//while(__HAL_UART_GET_FLAG(&TJC_UART, UART_FLAG_TXE) == RESET);	//等待发送完毕
-	while(__HAL_UART_GET_FLAG(&TJC_UART, UART_FLAG_TC) == RESET);
+	//while(__HAL_UART_GET_FLAG(&TJC_UART, UART_FLAG_TC) == RESET);
     //发送单个字符
-	HAL_UART_Transmit_IT(&TJC_UART, &ch2, 1);
+	HAL_UART_Transmit(&TJC_UART, &ch2, 1,HAL_MAX_DELAY);
 	return;
 }
 
@@ -89,7 +89,7 @@ void uart_send_char(char ch)
 void uart_send_string(char* str)
 {
     //当前字符串地址不在结尾 并且 字符串首地址不为空
-    while(*str!=0&&str!=0)
+    while (str != NULL && *str != 0)
     {
         //发送字符串首地址中的字符，并且在发送完成之后首地址自增
         uart_send_char(*str++);
@@ -131,7 +131,7 @@ void tjc_send_string(char* str)
 **********************************************************/
 void tjc_send_txt(char* objname, char* attribute, char* txt)
 {
-
+    // printf("ok");
     uart_send_string(objname);
     uart_send_char('.');
     uart_send_string(attribute);
