@@ -32,7 +32,7 @@ uint8_t shape;//形状
 //放行标志位
 int fang = 0;
 
-SystemState_t SystemState =STATE_WAIT_DISTANCE;//状态机结构体
+SystemState_t SystemState =STATE_RELEASE_ONE;//状态机结构体
 GoodsSlot GoodsTable[MAX_GOODS_TYPE];//马格南盘分类结构体
 int tik = 0;//计时
 
@@ -203,7 +203,7 @@ void System_StateMachine(void)
                     Display_Goods(slot);
                     Set_dipan_duo(HoleAngle[slot]);// 转到对应马格南仓位
                     flag = 0;
-                    SystemState = STATE_WAIT_DISTANCE;
+                    SystemState = STATE_WAIT_PHOTO;
                 }
             }
             break;
