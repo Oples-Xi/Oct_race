@@ -81,6 +81,8 @@ extern SystemState_t SystemState;
 //上位机接收变量
 uint8_t readBuffer[10];//上位机接收缓存
 
+extern GoodsSlot GoodsTable[MAX_GOODS_TYPE];
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -200,23 +202,25 @@ int main(void)
   tik = HAL_GetTick();
   HAL_UARTEx_ReceiveToIdle_IT(&huart1, readBuffer, sizeof(readBuffer));
   Set_dipan_duo(270);
+  tjc_send_txt("t1", "txt", "n");
+  for (int i = 0; i < 6;i++)
+    printf("%d", GoodsTable[i].count);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
-  {
-        System_StateMachine();
+    while (1)
+    {
+      System_StateMachine();
 
-
-        //调试的时候用串口监控的数据
-    //printf("%.2f\r\n",  Motor1_Feedback.total_angle);//马达角度
-    //printf("%.2f\r\n", Laser.Distance_cm);
+      // 调试的时候用串口监控的数据
+      // printf("%.2f\r\n",  Motor1_Feedback.total_angle);//马达角度
+      // printf("%.2f\r\n", Laser.Distance_cm);
 
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-  }
+    }
   /* USER CODE END 3 */
 }
 

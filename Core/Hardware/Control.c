@@ -222,6 +222,7 @@ void System_StateMachine(void)
             fang = 0;
             tik = HAL_GetTick();
             SystemState =STATE_RELEASE_ONE;
+            Set_dipan_duo(0);
         }
         break;
     }

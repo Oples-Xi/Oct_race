@@ -120,7 +120,7 @@ void Motor_PID_Init(void)//还没调！！！！！！！！！！！！！
              6.80f,
              0.0f,
              0.61f,
-             2000,
+             5000,//限幅
              0);
 
     PID_Init(&SpeedPID,
