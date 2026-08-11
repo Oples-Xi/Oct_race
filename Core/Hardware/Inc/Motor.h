@@ -13,19 +13,19 @@ void Motor_ControlLoop(void);
 void Motor_SetTargetAngle(float angle);
 
 /**
- * @brief é©¬è¾¾åé¦ˆ
+ * @brief Âí´ï·´À¡
  * 
  */
 typedef struct
 {
-    uint16_t encoder;          // å½“å‰ç¼–ç å™¨å€¼(0~8191)
-    uint16_t last_encoder;     // ä¸Šä¸€æ¬¡ç¼–ç å™¨å€¼
-    int32_t total_encoder;     // ç´¯è®¡ç¼–ç å™¨å€¼
-    double total_angle;         // è¿ç»­è§’åº¦(Â°)
+    uint16_t encoder;          // µ±Ç°±àÂëÆ÷Öµ(0~8191)
+    uint16_t last_encoder;     // ÉÏÒ»´Î±àÂëÆ÷Öµ
+    int32_t total_encoder;     // ÀÛ¼Æ±àÂëÆ÷Öµ
+    double total_angle;         // Á¬Ğø½Ç¶È(¡ã)
     int16_t speed;
     int16_t torque;
     uint8_t temp;
-    uint8_t initialized;       // é¦–æ¬¡æ¥æ”¶æ ‡å¿—
+    uint8_t initialized;       // Ê×´Î½ÓÊÕ±êÖ¾
 }Motor_Feedback_t;
 
 

@@ -7,34 +7,34 @@
 #define MAX_GOODS_TYPE 6
 
 /**
- * @brief é©¬æ ¼å—ç›˜åˆ†ç±»ç»“æ„ä½“
+ * @brief Âí¸ñÄÏÅÌ·ÖÀà½á¹¹Ìå
  * 
  */
 typedef struct
 {
-    uint8_t color;      // é¢œè‰²
-    uint8_t shape;      // å½¢çŠ¶
-    uint8_t count;      // æ•°é‡
-    uint8_t slot;       // å¯¹åº”é©¬æ ¼å—ç›˜ä»“ä½
-    uint8_t used;       // æ˜¯å¦å·²ç»åˆ†é…ä»“ä½
+    uint8_t color;      // ÑÕÉ«
+    uint8_t shape;      // ĞÎ×´
+    uint8_t count;      // ÊıÁ¿
+    uint8_t slot;       // ¶ÔÓ¦Âí¸ñÄÏÅÌ²ÖÎ»
+    uint8_t used;       // ÊÇ·ñÒÑ¾­·ÖÅä²ÖÎ»
 
 }GoodsSlot;
 
 
 
 /**
- * @brief çŠ¶æ€æšä¸¾
+ * @brief ×´Ì¬Ã¶¾Ù
  * 
  */
 typedef enum
 {
-    STATE_RELEASE_ONE = 0,/*< é‡Šæ”¾ä¸€ä¸ª */
+    STATE_RELEASE_ONE = 0,/*< ÊÍ·ÅÒ»¸ö */
 
-    STATE_WAIT_DISTANCE,/*< ç­‰å¾…è·ç¦» */
+    STATE_WAIT_DISTANCE,/*< µÈ´ı¾àÀë */
 
-    STATE_WAIT_CLASS,/*< ç­‰å¾…ç±»åˆ« */
+    STATE_WAIT_CLASS,/*< µÈ´ıÀà±ğ */
 
-    STATE_WAIT_PHOTO/*< ç¡®è®¤è¿›å…¥ */
+    STATE_WAIT_PHOTO/*< È·ÈÏ½øÈë */
 
 }SystemState_t;
 

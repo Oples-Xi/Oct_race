@@ -13,57 +13,57 @@
 
 
 /**
- * @brief æ£€æµ‹è´§ç‰©æ˜¯å¦ç¦»å¼€ä¼ é€å¸¦
+ * @brief ¼ì²â»õÎïÊÇ·ñÀë¿ª´«ËÍ´ø
  * 
- * @return 1 - æ˜¯ï¼›0 - å¦
+ * @return 1 - ÊÇ£»0 - ·ñ
  */
 uint8_t  isHuoIn(void)
 {
- static uint8_t state = 0;      // 0=é‡Šæ”¾æ€, 1=æŒ‰ä¸‹æ€
+ static uint8_t state = 0;      // 0=ÊÍ·ÅÌ¬, 1=°´ÏÂÌ¬
     static uint8_t count = 0;
-    uint8_t pin_status = IS_Huo_IN(); // 1=ç‰©ç†æŒ‰ä¸‹(ä½ç”µå¹³)
+    uint8_t pin_status = IS_Huo_IN(); // 1=ÎïÀí°´ÏÂ(µÍµçÆ½)
 
-    if (state == 0)  // ---------- é‡Šæ”¾çŠ¶æ€ ----------
+    if (state == 0)  // ---------- ÊÍ·Å×´Ì¬ ----------
     {
-        if (pin_status)  // æ£€æµ‹åˆ°ä½ç”µå¹³ï¼ˆæŒ‰ä¸‹ï¼‰
+        if (pin_status)  // ¼ì²âµ½µÍµçÆ½£¨°´ÏÂ£©
         {
             count++;
             if (count >= KEY_DEBOUNCE_COUNT)
             {
-                state = 1;      // åˆ‡æ¢ä¸ºæŒ‰ä¸‹çŠ¶æ€
+                state = 1;      // ÇĞ»»Îª°´ÏÂ×´Ì¬
                 count = 0;
-                return 1;       //åªæœ‰è¿™é‡Œè¿”å›1ï¼Œä»…ä»£è¡¨â€œæŒ‰ä¸‹åŠ¨ä½œâ€
+                return 1;       //Ö»ÓĞÕâÀï·µ»Ø1£¬½ö´ú±í¡°°´ÏÂ¶¯×÷¡±
             }
         }
         else
         {
-            count = 0;          // æœªæŒ‰ä¸‹ï¼Œæ¸…é›¶
+            count = 0;          // Î´°´ÏÂ£¬ÇåÁã
         }
     }
-    else  // ---------- æŒ‰ä¸‹çŠ¶æ€ ----------
+    else  // ---------- °´ÏÂ×´Ì¬ ----------
     {
-        if (!pin_status)  // æ£€æµ‹åˆ°é«˜ç”µå¹³ï¼ˆæ¾å¼€ï¼‰
+        if (!pin_status)  // ¼ì²âµ½¸ßµçÆ½£¨ËÉ¿ª£©
         {
             count++;
-            if (count >= KEY_DEBOUNCE_COUNT) // é‡Šæ”¾å»æŠ–å®Œæˆ
+            if (count >= KEY_DEBOUNCE_COUNT) // ÊÍ·ÅÈ¥¶¶Íê³É
             {
-                state = 0;      // åˆ‡å›é‡Šæ”¾çŠ¶æ€
+                state = 0;      // ÇĞ»ØÊÍ·Å×´Ì¬
                 count = 0;
-                //æ³¨æ„ï¼šè¿™é‡Œæ•…æ„ä¸è¿”å›ä»»ä½•å€¼ï¼Œæ¾å¼€ç»æ— è§¦å‘ï¼
+                //×¢Òâ£ºÕâÀï¹ÊÒâ²»·µ»ØÈÎºÎÖµ£¬ËÉ¿ª¾øÎŞ´¥·¢£¡
             }
         }
         else
         {
-            count = 0;          // æŒ‰ä¸‹æœŸé—´æŠ–åŠ¨ï¼Œæ¸…é›¶
+            count = 0;          // °´ÏÂÆÚ¼ä¶¶¶¯£¬ÇåÁã
         }
     }
     return 0;
 }
 
 /**
- * @brief è´§ç‰©æ˜¯å¦è¢«æ”¾è¡Œ
+ * @brief »õÎïÊÇ·ñ±»·ÅĞĞ
  * 
- * @return 1 - æ˜¯ï¼›0 - å¦
+ * @return 1 - ÊÇ£»0 - ·ñ
  */
 uint8_t  isHuoOut(void)
 {
@@ -109,16 +109,16 @@ uint8_t  isHuoOut(void)
 
 
 /**
- * @brief æ£€æµ‹æ˜¯å¦æœ‰å­˜è´§
+ * @brief ¼ì²âÊÇ·ñÓĞ´æ»õ
  * 
- * @return 1 - æ˜¯ï¼›0 - å¦
+ * @return 1 - ÊÇ£»0 - ·ñ
  */
 uint8_t isCunIn(void)
 {
     static uint8_t stable_state = 0;
     static uint8_t count = 0;
 
-    uint8_t pin_status = IS_CUN();  // 1=æœ‰è´§ï¼Œ0=æ— è´§
+    uint8_t pin_status = IS_CUN();  // 1=ÓĞ»õ£¬0=ÎŞ»õ
 
 
     if(pin_status != stable_state)

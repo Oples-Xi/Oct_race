@@ -3,16 +3,18 @@
 
 #include "main.h"
 
+/* ÎŞĞ§¾àÀëÖµ£¨²â¾à½ÓÊÕÊ§°ÜÊ±µÄ¶µµ×Öµ£© */
+#define LASER_INVALID_CM 100.0f
 
 /**
- * @brief æµ‹è·ç»“æ„ä½“
+ * @brief ²â¾à½á¹¹Ìå
  * 
  */
 typedef struct
 {
-    uint32_t Distance;/*!<æ¯«ç±³è·ç¦»*/
-    float Distance_cm;/*!<å˜ç±³è·ç¦»*/
-    uint8_t  FuncCode;/*!<åŠŸèƒ½ç */
+    uint32_t Distance;/*!<ºÁÃ×¾àÀë*/
+    float Distance_cm;/*!<ÀåÃ×¾àÀë*/
+    uint8_t  FuncCode;/*!<¹¦ÄÜÂë*/
     uint8_t  Error;/*Error*/
 }Laser_Data_t;
 

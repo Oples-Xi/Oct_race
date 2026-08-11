@@ -86,11 +86,11 @@
   [..]
     (+) The Coarse Digital Calibration can be used to compensate crystal inaccuracy
         by setting the DCS bit in RTC_CALIBR register.
-    (+) When positive calibration is enabled (DCS = â€˜0â€™), 2 asynchronous prescaler
+    (+) When positive calibration is enabled (DCS = ¡®0¡¯), 2 asynchronous prescaler
         clock cycles are added every minute during 2xDC minutes.
         This causes the calendar to be updated sooner, thereby adjusting the
         effective RTC frequency to be a bit higher.
-    (+) When negative calibration is enabled (DCS = â€˜1â€™), 1 asynchronous prescaler
+    (+) When negative calibration is enabled (DCS = ¡®1¡¯), 1 asynchronous prescaler
         clock cycle is removed every minute during 2xDC minutes.
         This causes the calendar to be updated later, thereby adjusting the
         effective RTC frequency to be a bit lower.

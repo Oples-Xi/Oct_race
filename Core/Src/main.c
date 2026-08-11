@@ -55,31 +55,21 @@
 
 /* USER CODE BEGIN PV */
 
-int test=0;//æµ‹è¯•ä¸“ç”¨å˜é‡
-int flag = 0; //æ ‡å¿—ä½
+//²â¾à±äÁ¿
+uint8_t LaserRx[8];           // ²â¾à´¦Àí»º³åÇø
+extern Laser_Data_t Laser; //²â¾à½á¹¹Ìå
 
-//æµ‹è·å˜é‡
-volatile uint8_t rxReady = 0; //æµ‹è·æ¥æ”¶å®Œæˆæ ‡å¿—
-uint8_t rxBuffer[8];          //æµ‹è·æ¥æ”¶ç¼“å†²åŒº
-uint8_t LaserRx[8];           // æµ‹è·å¤„ç†ç¼“å†²åŒº
-extern Laser_Data_t Laser; //æµ‹è·ç»“æ„ä½“
+//Âí´ï±äÁ¿
+extern Motor_Feedback_t Motor1_Feedback; // Âí´ï·´À¡
+uint8_t TxData[8] = {0};                 // can·¢ËÍ»º³åÇø
+int16_t torque1 = 0;                     // Âí´ï1Å¤¾ØÖµ
 
-//é©¬è¾¾å˜é‡
-extern Motor_Feedback_t Motor1_Feedback; // é©¬è¾¾åé¦ˆ
-uint8_t TxData[8] = {0};                 // canå‘é€ç¼“å†²åŒº
-int16_t torque1 = 0;                     // é©¬è¾¾1æ‰­çŸ©å€¼
-double Angle = 0;                     // é©¬è¾¾è§’åº¦å€¼
+//´®¿ÚÆÁ±äÁ¿
+extern RingBuffer_t ringBuffer;	//´´½¨Ò»¸öringBufferµÄÆÁÄ»´®¿Ú»º³åÇø
+extern uint8_t tjc_RxBuffer[1];//ÆÁÄ»´®¿Ú½ÓÊÕÃüÁîÎ»
 
-//ä¸²å£å±å˜é‡
-extern RingBuffer_t ringBuffer;	//åˆ›å»ºä¸€ä¸ªringBufferçš„å±å¹•ä¸²å£ç¼“å†²åŒº
-extern uint8_t tjc_RxBuffer[1];//å±å¹•ä¸²å£æ¥æ”¶å‘½ä»¤ä½
-
-//çŠ¶æ€æœºå˜é‡
-extern int tik;//çŠ¶æ€æœºè®¡æ—¶
-extern SystemState_t SystemState;
-
-//ä¸Šä½æœºæ¥æ”¶å˜é‡
-uint8_t readBuffer[10];//ä¸Šä½æœºæ¥æ”¶ç¼“å­˜
+//ÉÏÎ»»ú½ÓÊÕ±äÁ¿
+uint8_t readBuffer[10];//ÉÏÎ»»ú½ÓÊÕ»º´æ
 
 extern GoodsSlot GoodsTable[MAX_GOODS_TYPE];
 
@@ -89,13 +79,12 @@ extern GoodsSlot GoodsTable[MAX_GOODS_TYPE];
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 
-//extern void Laser_Parse(uint8_t *buf);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-//ä¸²å£é‡å®šå‘ï¼ˆåˆ«çš„åœ°æ–¹èˆ¬çš„ï¼Œéå¸¸ä¹‹å¥½ç”¨ï¼‰
+//´®¿ÚÖØ¶¨Ïò£¨±ğµÄµØ·½°ãµÄ£¬·Ç³£Ö®ºÃÓÃ£©
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -109,35 +98,18 @@ int fputc(int ch, FILE *f)
 #endif
 
 /**
-*@brief 16è¿›åˆ¶æ‰“å°ï¼Œç”¨äºä¸²å£ç›‘æ§å†…å­˜
-*/
- void ShowHex(uint8_t *buf,uint8_t len)
-{
-    uint8_t i;
-    printf("hex = ");
-    for( i = 0; i < len; i++){
-      printf(" %02X", buf[i]);
-    }
-    printf( "\r\n");
-}
-
-/**
- * @brief  ä¸²å£æ¥æ”¶ç©ºé—²å›è°ƒå‡½æ•°
+ * @brief  ´®¿Ú½ÓÊÕ¿ÕÏĞ»Øµ÷º¯Êı
  * 
  * @param huart 
  * @param Size 
  */
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
 {
-	if (huart == &huart1)
-  {
-    //è°ƒè¯•ç”¨
-    //printf("RX Size:%d\r\n",Size);
-    //ShowHex(readBuffer,Size);
-
-		Command_Write(readBuffer, Size);
-		HAL_UARTEx_ReceiveToIdle_IT(&huart1, readBuffer, sizeof(readBuffer));
-	}
+    if (huart == &huart1)
+    {
+        Command_Write(readBuffer, Size);
+        HAL_UARTEx_ReceiveToIdle_IT(&huart1, readBuffer, sizeof(readBuffer));
+    }
 }
 
 /* USER CODE END 0 */
@@ -183,7 +155,6 @@ int main(void)
   fangxin_duo_init();
   dipan_duo_init();
   Motor_Init();
-  //printf("Motor Init\r\n");
   HAL_Delay(1000);
   Laser_UART_Start();
   HAL_Delay(20);
@@ -192,14 +163,9 @@ int main(void)
   Motor_SetTargetAngle(5000);
   if (HAL_UART_Receive_IT(&huart5, LaserRx, 8) != HAL_OK)
   {
-    //good! è¡¨æ‰¬ä½ ï¼
+    Error_Handler();
   }
-  else
-  {
-    HAL_UART_Receive_IT(&huart5, LaserRx, 8);
-  }
-  Laser.Distance_cm = 100;
-  tik = HAL_GetTick();
+  Laser.Distance_cm = LASER_INVALID_CM;
   HAL_UARTEx_ReceiveToIdle_IT(&huart1, readBuffer, sizeof(readBuffer));
   Set_dipan_duo(270);
   /* USER CODE END 2 */
@@ -209,10 +175,6 @@ int main(void)
     while (1)
     {
       System_StateMachine();
-
-      // è°ƒè¯•çš„æ—¶å€™ç”¨ä¸²å£ç›‘æ§çš„æ•°æ®
-      // printf("%.2f\r\n",  Motor1_Feedback.total_angle);//é©¬è¾¾è§’åº¦
-      // printf("%.2f\r\n", Laser.Distance_cm);
 
     /* USER CODE END WHILE */
 
@@ -270,27 +232,27 @@ void SystemClock_Config(void)
 /* USER CODE BEGIN 4 */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-    if (huart == &huart5) //æµ‹è·ä¸²å£
+    if (huart == &huart5) //²â¾à´®¿Ú
     {
-        /* æ¸…é™¤æ‰€æœ‰é”™è¯¯æ ‡å¿—ï¼ˆå…³é”®ï¼‰ */
+        /* Çå³ıËùÓĞ´íÎó±êÖ¾£¨¹Ø¼ü£© */
         if (huart->ErrorCode != HAL_UART_ERROR_NONE) 
         {
             (void)huart->Instance->DR;
             huart->ErrorCode = HAL_UART_ERROR_NONE;
         }
-        Laser_Parse(LaserRx); // è§£ææ¿€å…‰æ•°æ®
+        Laser_Parse(LaserRx); // ½âÎö¼¤¹âÊı¾İ
 
-        /* é‡æ–°å¯åŠ¨æ¥æ”¶ï¼ˆåŠ¡å¿…æ£€æŸ¥è¿”å›å€¼ï¼‰ */
+        /* ÖØĞÂÆô¶¯½ÓÊÕ£¨Îñ±Ø¼ì²é·µ»ØÖµ£© */
         if (HAL_UART_Receive_IT(&huart5, LaserRx, 8) != HAL_OK) {
-            // è‹¥å¯åŠ¨å¤±è´¥ï¼Œå°è¯•é‡æ–°åˆå§‹åŒ–UARTæˆ–è¿›å…¥é”™è¯¯å¤„ç†
+            // ÈôÆô¶¯Ê§°Ü£¬³¢ÊÔÖØĞÂ³õÊ¼»¯UART»ò½øÈë´íÎó´¦Àí
             Error_Handler();
         }
     }
 
-    if (huart ==&huart2) // å±å¹•ä¸²å£
+    if (huart ==&huart2) // ÆÁÄ»´®¿Ú
     {
       write1ByteToRingBuffer(tjc_RxBuffer[0]);
-      HAL_UART_Receive_IT(&TJC_UART, tjc_RxBuffer, 1); // é‡æ–°ä½¿èƒ½ä¸²å£2æ¥æ”¶ä¸­æ–­
+      HAL_UART_Receive_IT(&TJC_UART, tjc_RxBuffer, 1); // ÖØĞÂÊ¹ÄÜ´®¿Ú2½ÓÊÕÖĞ¶Ï
     }
 
     return;
@@ -305,7 +267,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
   {
     if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &RxHeader, RxData) == HAL_OK)
     {
-      // ç”µæœº1åé¦ˆ
+      // µç»ú1·´À¡
       if (RxHeader.StdId == 0x201)
       {
         uint16_t encoder =

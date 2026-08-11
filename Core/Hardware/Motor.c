@@ -14,7 +14,7 @@ float target_angle=0;
 
 
 /**
- * @brief åˆå§‹åŒ–CANæ»¤æ³¢å™¨
+ * @brief ³õÊ¼»¯CANÂË²¨Æ÷
  * 
  */
 void can_filter_init(void)
@@ -41,7 +41,7 @@ void can_filter_init(void)
 
 
 /**
- * @brief åˆå§‹åŒ–CANå‘é€æŠ¥æ–‡å¤´ï¼Œä¸»å‡½æ•°åªéœ€è¦è°ƒç”¨è¿™ä¸ª
+ * @brief ³õÊ¼»¯CAN·¢ËÍ±¨ÎÄÍ·£¬Ö÷º¯ÊıÖ»ĞèÒªµ÷ÓÃÕâ¸ö
  * 
  */
 void Motor_Init(void)
@@ -59,7 +59,7 @@ void Motor_Init(void)
 
 
 /**
- * @brief è®¾ç½®é©¬è¾¾é€Ÿåº¦
+ * @brief ÉèÖÃÂí´ïËÙ¶È
  * 
  * @param speed
  */
@@ -85,7 +85,7 @@ void Motor_SetSpeed(int16_t speed)
 void Motor_UpdateAngle(Motor_Feedback_t *motor, uint16_t encoder)
 {
     motor->encoder = encoder;
-    /* ç¬¬ä¸€æ¬¡æ”¶åˆ°æ•°æ® */
+    /* µÚÒ»´ÎÊÕµ½Êı¾İ */
     if(motor->initialized == 0)
     {
         motor->initialized = 1;
@@ -96,12 +96,12 @@ void Motor_UpdateAngle(Motor_Feedback_t *motor, uint16_t encoder)
         return;
     }
     int16_t diff = encoder - motor->last_encoder;
-    /* æ­£å‘è·¨è¶Š8191->0 */
+    /* ÕıÏò¿çÔ½8191->0 */
     if(diff < -4096)
     {
         diff += 8192;
     }
-    /* åå‘è·¨è¶Š0->8191 */
+    /* ·´Ïò¿çÔ½0->8191 */
     else if(diff > 4096)
     {
         diff -= 8192;
@@ -114,13 +114,13 @@ void Motor_UpdateAngle(Motor_Feedback_t *motor, uint16_t encoder)
 
 
 
-void Motor_PID_Init(void)//è¿˜æ²¡è°ƒï¼ï¼ï¼ï¼ï¼ï¼ï¼ï¼ï¼ï¼ï¼ï¼ï¼
+void Motor_PID_Init(void)//»¹Ã»µ÷£¡£¡£¡£¡£¡£¡£¡£¡£¡£¡£¡£¡£¡
 {
     PID_Init(&PositionPID,
              6.80f,
              0.0f,
              0.61f,
-             5000,//é™å¹…
+             5000,//ÏŞ·ù
              0);
 
     PID_Init(&SpeedPID,
@@ -134,9 +134,9 @@ void Motor_PID_Init(void)//è¿˜æ²¡è°ƒï¼ï¼ï¼ï¼ï¼ï¼ï¼ï¼ï¼ï¼ï¼ï¼ï¼
 
 
 /**
- * @brief è®¾ç½®ç›®æ ‡è§’åº¦
+ * @brief ÉèÖÃÄ¿±ê½Ç¶È
  * 
- * @param angle è§’åº¦
+ * @param angle ½Ç¶È
  */
 void Motor_SetTargetAngle(float angle)
 {
@@ -146,12 +146,12 @@ void Motor_SetTargetAngle(float angle)
 
 
 /**
- * @brief PidåŒç¯æ§åˆ¶
+ * @brief PidË«»·¿ØÖÆ
  * 
  */
 void Motor_ControlLoop(void)
 {
-    /* ----------ä½ç½®ç¯---------- */
+    /* ----------Î»ÖÃ»·---------- */
 
     PositionPID.target =
         target_angle;
@@ -162,7 +162,7 @@ void Motor_ControlLoop(void)
     float target_speed =
         PID_Calculate(&PositionPID);
 
-    /* ----------é€Ÿåº¦ç¯---------- */
+    /* ----------ËÙ¶È»·---------- */
 
     SpeedPID.target =
         target_speed;

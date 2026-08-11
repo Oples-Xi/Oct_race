@@ -5,7 +5,7 @@
 ![MCU](https://img.shields.io/badge/MCU-STM32F407ZG-blue)
 ![Language](https://img.shields.io/badge/Language-C-00599C)
 ![IDE](https://img.shields.io/badge/IDE-Keil_MDK--ARM-orange)
-![Version](https://img.shields.io/badge/Version-v0.2.5-brightgreen)
+![Version](https://img.shields.io/badge/Version-v0.3.0-brightgreen)
 ![Status](https://img.shields.io/badge/Status-%E5%BC%80%E5%8F%91%E4%B8%AD-brightgreen)
 
 ## 📖 项目简介
@@ -95,12 +95,13 @@ Oct_race/
 - **v0.2.4** — `驱动`：放行机构改为双舵机；`控制`：状态机中调用存货传感器，重写第一状态；`调试`：与视觉进行上位机联调 ✅
 - **v0.2.5** — `算法`：串口屏通讯映射表；`控制`：状态机中调用上位机信息与串口屏的映射关系
 
-
 ### 08.11
 
-- **v0.2.5.1** - `底层`：适配新板
-- 0.3.0 全驱动
--0.3.v 视觉（vision）调试特供版
+- **v0.2.5.1** — `底层`：适配新板
+- **0.3.0** — **全驱动** ✅
+  - **0.3.v** — 视觉（vision）调试特供版（v0.3.0 的附加小版本）
+  - **0.3.a** — AI 优化版 ~~（不太敢用，先保留）~~
+
 ## 📌 当前进度
 
 - [x] 代码架构编写

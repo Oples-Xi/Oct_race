@@ -9,46 +9,47 @@
 #include "usart.h"
 #include "screen.h"
 
-extern Laser_Data_t Laser; //æµ‹è·ç»“æ„ä½“
-extern Motor_Feedback_t Motor1_Feedback; // é©¬è¾¾åé¦ˆ
+extern Laser_Data_t Laser;          // ²â¾à½á¹¹Ìå
+extern Motor_Feedback_t Motor1_Feedback; // Âí´ï·´À¡
+extern uint8_t LaserRx[8];          // ²â¾à½ÓÊÕ»º³åÇø
 
+/* ==================== ¿Éµ÷²ÎÊı£¨°´Êµ¼Ê»ú¹¹µ÷Õû£© ==================== */
+#define BELT_CRUISE_STEP_DEG        1.0f    // Ñ²º½£ºÃ¿²½ÍÆ½ø½Ç¶È
+#define BELT_CRUISE_INTERVAL_MS     20      // Ñ²º½£ºÍÆ½ø¼ä¸ô
+#define BELT_APPROACH_STEP_DEG      5.0f    // ¿¿½ü£ºÃ¿²½ÍÆ½ø½Ç¶È
+#define BELT_APPROACH_INTERVAL_MS   50      // ¿¿½ü£ºÍÆ½ø¼ä¸ô
+#define DETECT_DISTANCE_CM          15.0f   // Í£Ö¹²â¾à¾àÀë
+#define MOTOR_STOP_WAIT_MS          1000    // µç»úÍ£ÎÈµÈ´ıÊ±¼ä
+#define RELEASE_TIMEOUT_MS          5000    // ·ÅĞĞºóµÈ´ı»õÎï¾­¹ı³¬Ê±
+#define GATE_RESET_MS               2000    // ³¬Ê±ºó¶æ»ú¸´Î»³ÖĞøÊ±¼ä
+#define WAIT_CLASS_RETRY_MS         3000    // µÈ´ı·ÖÀàÃüÁîÊ±ÖØ·¢ Ready ¼ä¸ô
+#define STATE_TIMEOUT_MS            10000   // ×´Ì¬»úµÈ´ı³¬Ê±
+#define RELEASE_OPEN_DEG            90      // ·ÅĞĞ¶æ»ú´ò¿ª½Ç¶È
+#define RELEASE_CLOSE_DEG           0       // ·ÅĞĞ¶æ»ú¹Ø±Õ½Ç¶È
 
-//float TargetAngle;
+/* ==================== Ä£¿éÄÚ²¿±äÁ¿ ==================== */
+static uint8_t command[50];         // ÃüÁî½âÎö»º³å
+static double Angle = 0;            // Âí´ï½Ç¶È
+static uint8_t stop_flag = 0;       // µç»úÍ£ÎÈ±êÖ¾
+static uint8_t release_flag = 0;    // ·ÅĞĞ±êÖ¾
+static uint32_t release_start = 0;  // ·ÅĞĞ¼ÆÊ±
+static uint32_t stop_start = 0;     // Í£ÎÈµÈ´ı¼ÆÊ±
+static uint32_t approach_start = 0; // ²â¾à¶¨Î»³¬Ê±¼ÆÊ±
+static uint32_t class_start = 0;    // ·ÖÀàµÈ´ı³¬Ê±¼ÆÊ±
+static uint32_t photo_start = 0;    // ½ø¶´µÈ´ı³¬Ê±¼ÆÊ±
+static uint32_t belt_last_tick = 0; // ´«ËÍ´øÍÆ½ø½ÚÅÄ
 
-//uint8_t GoodsType = 0;
+static SystemState_t SystemState = STATE_RELEASE_ONE;  // ×´Ì¬»ú½á¹¹Ìå
+GoodsSlot GoodsTable[MAX_GOODS_TYPE];           // Âí¸ñÄÏÅÌ·ÖÀà½á¹¹Ìå
 
-//æ¥æ”¶ç¼“å­˜å˜é‡
-uint8_t command[50];
-int commandLength = 0;
-
-//åˆ†ç±»å˜é‡
-uint8_t color;//é¢œè‰²
-uint8_t shape;//å½¢çŠ¶
-
-//ä¼ªä»£ç æ›¿ä»£å˜é‡
-//uint8_t UpperReady = 0;
-//uint8_t PhotoSensor = 0;
-
-//æ”¾è¡Œæ ‡å¿—ä½
-int fang = 0;
-
-SystemState_t SystemState =STATE_RELEASE_ONE;//çŠ¶æ€æœºç»“æ„ä½“
-GoodsSlot GoodsTable[MAX_GOODS_TYPE];//é©¬æ ¼å—ç›˜åˆ†ç±»ç»“æ„ä½“
-int tik = 0;//è®¡æ—¶
-
-extern float Angle;//mainä¸­é©¬è¾¾è§’åº¦
-extern int flag;//mainä¸­æ ‡å¿—ä½
-extern const int HoleAngle[];
-
-extern uint8_t LaserRx[8];
+extern const int HoleAngle[];       // ¸÷²ÖÎ»¶ÔÓ¦µÄ×ªÅÌ½Ç¶È
 
 /**
- * @brief  è½®ç›˜åˆ†ç±»è®°å½•åˆå§‹åŒ–
- * 
+ * @brief  ÂÖÅÌ·ÖÀà¼ÇÂ¼³õÊ¼»¯
  */
 void GoodsTable_Init(void)
 {
-    for(int i=0;i<MAX_GOODS_TYPE;i++)
+    for (int i = 0; i < MAX_GOODS_TYPE; i++)
     {
         GoodsTable[i].used = 0;
         GoodsTable[i].count = 0;
@@ -56,21 +57,20 @@ void GoodsTable_Init(void)
 }
 
 /**
- * @brief  æŸ¥æ‰¾å·²æœ‰åˆ†ç±»
- * 
- * @param color é¢œè‰²
- * @param shape å½¢çŠ¶
- * @return int  æ‰¾åˆ°è¿”å›ä»“ä½ç¼–å·ï¼Œæ‰¾ä¸åˆ°è¿”å›-1
+ * @brief  ²éÕÒÒÑÓĞ·ÖÀà
+ *
+ * @param color ÑÕÉ«
+ * @param shape ĞÎ×´
+ * @return int  ÕÒµ½·µ»Ø²ÖÎ»±àºÅ£¬ÕÒ²»µ½·µ»Ø-1
  */
-int Goods_Find(uint8_t color,uint8_t shape)
+int Goods_Find(uint8_t color, uint8_t shape)
 {
-
-    for(int i=0;i<MAX_GOODS_TYPE;i++)
+    for (int i = 0; i < MAX_GOODS_TYPE; i++)
     {
-        if(GoodsTable[i].used)
+        if (GoodsTable[i].used)
         {
-            if(GoodsTable[i].color == color &&
-               GoodsTable[i].shape == shape)
+            if (GoodsTable[i].color == color &&
+                GoodsTable[i].shape == shape)
             {
                 return i;
             }
@@ -80,18 +80,17 @@ int Goods_Find(uint8_t color,uint8_t shape)
 }
 
 /**
- * @brief æ–°è´§ç‰©è‡ªåŠ¨ç¼–å·
- * 
- * @param color 
- * @param shape 
- * @return int 
+ * @brief ĞÂ»õÎï×Ô¶¯±àºÅ
+ *
+ * @param color
+ * @param shape
+ * @return int
  */
-int Goods_Add(uint8_t color,uint8_t shape)
+int Goods_Add(uint8_t color, uint8_t shape)
 {
-
-    for(int i=0;i<MAX_GOODS_TYPE;i++)
+    for (int i = 0; i < MAX_GOODS_TYPE; i++)
     {
-        if(GoodsTable[i].used == 0)
+        if (GoodsTable[i].used == 0)
         {
             GoodsTable[i].color = color;
             GoodsTable[i].shape = shape;
@@ -104,129 +103,177 @@ int Goods_Add(uint8_t color,uint8_t shape)
 }
 
 /**
- * @brief çŠ¶æ€æœºä¸»å‡½æ•°ï¼ˆwhileä¸­è°ƒç”¨ï¼‰
- * 
+ * @brief °´¹Ì¶¨½ÚÅÄÍÆ½ø´«ËÍ´ø£¬±ÜÃâÖ÷Ñ­»·ÆµÂÊÓ°ÏìÊµ¼ÊËÙ¶È
+ *
+ * @param step        Ã¿´ÎÍÆ½øµÄ½Ç¶È
+ * @param interval_ms ÍÆ½ø¼ä¸ô
+ */
+static void Belt_Advance(float step, uint32_t interval_ms)
+{
+    if (HAL_GetTick() - belt_last_tick >= interval_ms)
+    {
+        belt_last_tick = HAL_GetTick();
+        Angle += step;
+        Motor_SetTargetAngle(Angle);
+    }
+}
+
+/**
+ * @brief ×´Ì¬»úÖ÷º¯Êı£¨whileÖĞµ÷ÓÃ£©
  */
 void System_StateMachine(void)
 {
-    switch(SystemState)
+    switch (SystemState)
     {
-        case STATE_RELEASE_ONE://æ”¾è¡Œä¸€ä¸ªè´§ç‰©
-
-            if (isCunIn() && fang == 0) // æœ‰å­˜è´§ä¸”æ²¡æ”¾è¡Œè¿‡
-            {
-                tik = HAL_GetTick();
-                Set_fangxin_duo(90); // èˆµæœºæ”¾è¡Œ
-                fang = 1;
-            }
-
-            if (!isHuoIn() && HAL_GetTick() - tik < 5000) // æ²¡ç»è¿‡ä¼ æ„Ÿå™¨
-            {
-                Angle += 1;
-                Motor_SetTargetAngle(Angle); // ä¸€ç›´è½¬
-            }
-
-            if (!isHuoIn() && HAL_GetTick() - tik > 5000 && fang == 1) // æ”¾è¡Œå5sè¿˜æ²¡ç»è¿‡ä¼ æ„Ÿå™¨
-            {
-                if (HAL_GetTick() - tik < 7000)
-                {
-                    Set_fangxin_duo(0); // èˆµæœºå¤ä½
-                    
-                }
-                if (HAL_GetTick() - tik > 7000)
-                {
-                    fang = 0;
-                }
-            }
-
-            if (isHuoIn() && fang == 1)
-            {
-                Set_fangxin_duo(0); // èˆµæœºå¤ä½
-                flag = 0;
-                fang = 0;
-                SystemState =
-                    STATE_WAIT_DISTANCE;
-            }
-        
-        break;
-
-        /**
-         * å®šä½åˆ°æ£€æµ‹åŒº
-         */
-        case STATE_WAIT_DISTANCE:
-            
-            if (Laser.Distance_cm == 100.0f) // æµ‹è·æ¨¡å—å¯èƒ½æ¥æ”¶å¤±è´¥ï¼Œäºæ˜¯é‡æ–°æ¥æ”¶
-            {
-                HAL_UART_Receive_IT(&huart5, LaserRx, 8);
-            }
-        if(Laser.Distance_cm>15.0f && flag==0)/* ç­‰å¾…è·ç¦»åˆ°15cm*/
+        case STATE_RELEASE_ONE: // ·ÅĞĞÒ»¸ö»õÎï
         {
-            //printf("%.2f\r\n", Angle);
-            Angle += 50;
-            Motor_SetTargetAngle(Angle);
-        }
-        if (Laser.Distance_cm <= 15.0f && flag != 1)
-        {
-            Angle = Motor1_Feedback.total_angle;
-            Motor_SetTargetAngle(Angle);
-            flag = 1;
-            Motor1_Feedback.total_angle = 0;
-            HAL_Delay(1000);//ç­‰åœç¨³  
-            //ä¸ºä»€ä¹ˆç”¨hal_delay?å› ä¸ºæˆ‘æ‡’
-            printf("Ready\r\n"); // å‘ä¿¡æ¯ç»™ä¸Šä½æœº
-            SystemState = STATE_WAIT_CLASS;
-        }
-        break;
-
-        /*
-        *åˆ†ç±»
-        */
-        case STATE_WAIT_CLASS:
-        {
-            commandLength = Command_GetCommand(command);
-            if (commandLength != 0)
+            /* ÓĞ´æ»õÇÒÎ´·ÅĞĞ ¡ú ´ò¿ª·ÅĞĞ¶æ»ú */
+            if (isCunIn() && release_flag == 0)
             {
-                //2HAL_UART_Transmit(&huart2, command, commandLength, HAL_MAX_DELAY);
-                uint8_t color = command[2];
-                uint8_t shape = command[3];
-                // æŸ¥æ‰¾æ˜¯å¦å·²ç»å­˜åœ¨
-                int slot = Goods_Find(color, shape);
-                // ç¬¬ä¸€æ¬¡è¯†åˆ«è¯¥è´§ç‰©
-                if (slot == -1)
+                release_start = HAL_GetTick();
+                Set_fangxin_duo(RELEASE_OPEN_DEG);
+                release_flag = 1;
+            }
+
+            /* »õÎï¾­¹ı´«¸ĞÆ÷ ¡ú ¹Ø¶æ»ú£¬½øÈë²â¾à¶¨Î» */
+            if (isHuoIn())
+            {
+                Set_fangxin_duo(RELEASE_CLOSE_DEG);
+                release_flag = 0;
+                stop_flag = 0;
+                approach_start = HAL_GetTick();
+                SystemState = STATE_WAIT_DISTANCE;
+                break;
+            }
+
+            /* ÒÑ·ÅĞĞµ«»õÎï³Ù³ÙÎ´µ½ ¡ú ÏÈ¹Ø¶æ»ú£¬³¬Ê±ºóÔÊĞíÖØĞÂ·ÅĞĞ */
+            if (release_flag == 1)
+            {
+                if (HAL_GetTick() - release_start < RELEASE_TIMEOUT_MS)
                 {
-                    slot = Goods_Add(color, shape);
+                    Belt_Advance(BELT_CRUISE_STEP_DEG, BELT_CRUISE_INTERVAL_MS);
                 }
-                if (slot != -1)
+                else if (HAL_GetTick() - release_start < RELEASE_TIMEOUT_MS + GATE_RESET_MS)
                 {
-                    GoodsTable[slot].count++;
-                    //printf("Color:%d Shape:%d Slot:%d \r\n", color, shape, slot);
-                    Display_Goods(slot);
-                    Set_dipan_duo(HoleAngle[slot]);// è½¬åˆ°å¯¹åº”é©¬æ ¼å—ä»“ä½
-                    flag = 0;
-                    SystemState = STATE_WAIT_PHOTO;
+                    Set_fangxin_duo(RELEASE_CLOSE_DEG);
+                }
+                else
+                {
+                    release_flag = 0;
                 }
             }
             break;
         }
 
-        /**
-         * æ£€æµ‹è¿›æ´
-         */
-        case STATE_WAIT_PHOTO:
-        if (!isHuoOut())
+        case STATE_WAIT_DISTANCE: // ¶¨Î»µ½¼ì²âÇø
         {
-            Angle += 50;
-            Motor_SetTargetAngle(Angle);//ä¸€ç›´è½¬
+            /* ²â¾àÊı¾İÎŞĞ§ ¡ú ÖØĞÂ·¢Æğ½ÓÊÕ */
+            if (Laser.Distance_cm >= LASER_INVALID_CM)
+            {
+                HAL_UART_Receive_IT(&huart5, LaserRx, 8);
+            }
+
+            /* ¾àÀëÎ´µ½ ¡ú ´«ËÍ´ø¼ÌĞøËÍÁÏ */
+            if (Laser.Distance_cm > DETECT_DISTANCE_CM && stop_flag == 0)
+            {
+                Belt_Advance(BELT_APPROACH_STEP_DEG, BELT_APPROACH_INTERVAL_MS);
+            }
+
+            /* ¾àÀëµ½Î» ¡ú Í£Ö¹£¬µÈµç»úÍ£ÎÈºóÔÙÇåÁãÀÛ¼Æ½Ç¶È */
+            if (Laser.Distance_cm <= DETECT_DISTANCE_CM && stop_flag == 0)
+            {
+                stop_flag = 1;
+                stop_start = HAL_GetTick();
+                Motor_SetTargetAngle(Motor1_Feedback.total_angle);
+            }
+
+            if (stop_flag == 1 && HAL_GetTick() - stop_start >= MOTOR_STOP_WAIT_MS)
+            {
+                /* ÒÑÍ£ÎÈ£¨target == feedback£©£¬´ËÊ±ÇåÁãÀÛ¼Æ½Ç¶È²»»áµ¼ÖÂ PID ³é´¤ */
+                Motor1_Feedback.total_angle = 0;
+                Angle = 0;
+                stop_flag = 0;
+                printf("Ready\r\n"); // ·¢ĞÅÏ¢¸øÉÏÎ»»ú
+                class_start = HAL_GetTick();
+                SystemState = STATE_WAIT_CLASS;
+            }
+
+            /* ³¬Ê±±£»¤£º³Ù³Ù²â²»µ½¾àÀë£¬»Øµ½·ÅĞĞ×´Ì¬ÖØĞÂ¿ªÊ¼ */
+            if (HAL_GetTick() - approach_start >= STATE_TIMEOUT_MS)
+            {
+                release_flag = 0;
+                stop_flag = 0;
+                SystemState = STATE_RELEASE_ONE;
+            }
+            break;
         }
-        if(isHuoOut())
+
+        case STATE_WAIT_CLASS: // µÈ´ıÉÏÎ»»ú·ÖÀà
         {
-            //printf("1");//æµ‹è¯•ç”¨
-            flag = 0;
-            fang = 0;
-            tik = HAL_GetTick();
-            SystemState =STATE_RELEASE_ONE;
-            Set_dipan_duo(0);
+            uint8_t len = Command_GetCommand(command);
+
+            if (len != 0)
+            {
+                uint8_t color = command[2];
+                uint8_t shape = command[3];
+
+                /* ²éÕÒÊÇ·ñÒÑ¾­´æÔÚ£¬²»´æÔÚÔòĞÂ½¨·ÖÀà */
+                int slot = Goods_Find(color, shape);
+                if (slot == -1)
+                {
+                    slot = Goods_Add(color, shape);
+                }
+
+                if (slot != -1)
+                {
+                    GoodsTable[slot].count++;
+                    Display_Goods(slot);
+                    Set_dipan_duo(HoleAngle[slot]); // ×ªµ½¶ÔÓ¦Âí¸ñÄÏ²ÖÎ»
+                    stop_flag = 0;
+                    photo_start = HAL_GetTick();
+                    SystemState = STATE_WAIT_PHOTO;
+                }
+                break;
+            }
+
+            /* ³¬Ê±±£»¤£ºÉÏÎ»»úÎ´»Ø¸´£¬ÖØ·¢ Ready ¼ÌĞøµÈ´ı */
+            if (HAL_GetTick() - class_start >= WAIT_CLASS_RETRY_MS)
+            {
+                printf("Ready\r\n");
+                class_start = HAL_GetTick();
+            }
+            break;
         }
-        break;
+
+        case STATE_WAIT_PHOTO: // ¼ì²â½ø¶´
+        {
+            if (!isHuoOut())
+            {
+                Belt_Advance(BELT_CRUISE_STEP_DEG, BELT_CRUISE_INTERVAL_MS); // ¼ÌĞøËÍÁÏ
+            }
+
+            if (isHuoOut())
+            {
+                release_flag = 0;
+                stop_flag = 0;
+                Set_dipan_duo(0);
+                SystemState = STATE_RELEASE_ONE;
+                break;
+            }
+
+            /* ³¬Ê±±£»¤£º»õÎïÃ»½ø¶´£¬¸´Î»ºó»Øµ½·ÅĞĞ×´Ì¬ */
+            if (HAL_GetTick() - photo_start >= STATE_TIMEOUT_MS)
+            {
+                release_flag = 0;
+                stop_flag = 0;
+                Set_dipan_duo(0);
+                SystemState = STATE_RELEASE_ONE;
+            }
+            break;
+        }
+
+        default:
+            SystemState = STATE_RELEASE_ONE;
+            break;
     }
 }
