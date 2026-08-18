@@ -134,7 +134,6 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
     //调试用
     //printf("RX Size:%d\r\n",Size);
     //ShowHex(readBuffer,Size);
-
 		Command_Write(readBuffer, Size);
 		HAL_UARTEx_ReceiveToIdle_IT(&huart1, readBuffer, sizeof(readBuffer));
 	}
@@ -188,6 +187,7 @@ int main(void)
   Laser_UART_Start();
   HAL_Delay(20);
   Motor_PID_Init();
+  pidai_duo_init();
   Laser_StartContinuous();
   Motor_SetTargetAngle(5000);
   if (HAL_UART_Receive_IT(&huart5, LaserRx, 8) != HAL_OK)
@@ -201,14 +201,22 @@ int main(void)
   Laser.Distance_cm = 100;
   tik = HAL_GetTick();
   HAL_UARTEx_ReceiveToIdle_IT(&huart1, readBuffer, sizeof(readBuffer));
-  Set_dipan_duo(270);
+  //Set_dipan_duo(270);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
     while (1)
     {
-      System_StateMachine();
+      //System_StateMachine();
+      Set_pidai_zhuan(0);
+      HAL_Delay(1999);
+      Set_pidai_zhuan(33);
+      HAL_Delay(999);
+      Set_pidai_zhuan(66);
+      HAL_Delay(999);
+      Set_pidai_zhuan(100);
+      HAL_Delay(999);
 
       // 调试的时候用串口监控的数据
       // printf("%.2f\r\n",  Motor1_Feedback.total_angle);//马达角度
@@ -308,22 +316,14 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
       // 电机1反馈
       if (RxHeader.StdId == 0x201)
       {
-        uint16_t encoder =
-            (RxData[0] << 8) | RxData[1];
-
+        uint16_t encoder =(RxData[0] << 8) | RxData[1];
         Motor_UpdateAngle(&Motor1_Feedback, encoder);
-
-        Motor1_Feedback.speed =
-            (RxData[2] << 8) | RxData[3];
-
-        Motor1_Feedback.torque =
-            (RxData[4] << 8) | RxData[5];
-
-        Motor1_Feedback.temp =
-            RxData[6];
+        Motor1_Feedback.speed = (RxData[2] << 8) | RxData[3];
+        Motor1_Feedback.torque = (RxData[4] << 8) | RxData[5];
+        Motor1_Feedback.temp = RxData[6];
       }
     }
-    }
+  }
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)

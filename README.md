@@ -5,7 +5,7 @@
 ![MCU](https://img.shields.io/badge/MCU-STM32F407ZG-blue)
 ![Language](https://img.shields.io/badge/Language-C-00599C)
 ![IDE](https://img.shields.io/badge/IDE-Keil_MDK--ARM-orange)
-![Version](https://img.shields.io/badge/Version-v0.3.0-brightgreen)
+![Version](https://img.shields.io/badge/Version-v0.3.1-brightgreen)
 ![Status](https://img.shields.io/badge/Status-%E5%BC%80%E5%8F%91%E4%B8%AD-brightgreen)
 
 ## 📖 项目简介
@@ -21,7 +21,7 @@
 
 | 部件 | 型号 / 说明 |
 | --- | --- |
-| 主控芯片 | STM32F407ZGTx |
+| 主控芯片 | STM32F407ZGT6 |
 | 激光测距模块 | MyAntenna L1-40 |
 | 马达 | DJI M2006（单马达） |
 | 舵机 | 双舵机（底盘舵机 / 放行机构） |
@@ -99,8 +99,12 @@ Oct_race/
 
 - **v0.2.5.1** — `底层`：适配新板
 - **0.3.0** — **全驱动** ✅
-  - **0.3.v** — 视觉（vision）调试特供版（v0.3.0 的附加小版本）
+  - **0.3.v** — 视觉（vision）调试特供版
   - **0.3.a** — AI 优化版 ~~（不太敢用，先保留）~~
+
+### 08.18
+
+- **v0.3.1** -`底层`：匹配舵机
 
 ## 📌 当前进度
 

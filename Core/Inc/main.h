@@ -71,8 +71,8 @@ void Error_Handler(void);
 #define luoxia_In_GPIO_Port GPIOA
 #define cunhuo_In_Pin GPIO_PIN_4
 #define cunhuo_In_GPIO_Port GPIOC
-#define fangxin2_duo_Pin GPIO_PIN_14
-#define fangxin2_duo_GPIO_Port GPIOB
+#define pidai_duo_Pin GPIO_PIN_14
+#define pidai_duo_GPIO_Port GPIOB
 #define PCTx_Pin GPIO_PIN_9
 #define PCTx_GPIO_Port GPIOA
 #define PCRx_Pin GPIO_PIN_10

@@ -134,7 +134,7 @@ void MX_TIM12_Init(void)
 
   /* USER CODE END TIM12_Init 1 */
   htim12.Instance = TIM12;
-  htim12.Init.Prescaler = 167;
+  htim12.Init.Prescaler = 83;
   htim12.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim12.Init.Period = 19999;
   htim12.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -243,12 +243,12 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef* timHandle)
     /**TIM12 GPIO Configuration
     PB14     ------> TIM12_CH1
     */
-    GPIO_InitStruct.Pin = fangxin2_duo_Pin;
+    GPIO_InitStruct.Pin = pidai_duo_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     GPIO_InitStruct.Alternate = GPIO_AF9_TIM12;
-    HAL_GPIO_Init(fangxin2_duo_GPIO_Port, &GPIO_InitStruct);
+    HAL_GPIO_Init(pidai_duo_GPIO_Port, &GPIO_InitStruct);
 
   /* USER CODE BEGIN TIM12_MspPostInit 1 */
 

@@ -18,8 +18,8 @@ const int HoleAngle[6] =
  */
 void Set_dipan_duo(int angle)
 {
-    if(angle>180)
-        angle = 180;
+    if(angle>270)
+        angle = 270;
         else if(angle<0)
             angle = 0;
         __HAL_TIM_SetCompare(&htim9, TIM_CHANNEL_1, angle * 2000 / 270 + 500);
@@ -43,9 +43,7 @@ void dipan_duo_init(void)
 void fangxin_duo_init(void)
 {
     HAL_TIM_Base_Start(&htim9);
-    HAL_TIM_Base_Start(&htim12);
     HAL_TIM_PWM_Start(&htim9, TIM_CHANNEL_2);
-    HAL_TIM_PWM_Start(&htim12, TIM_CHANNEL_1);
     Set_fangxin_duo(0);
 }
 
@@ -60,6 +58,22 @@ void Set_fangxin_duo(int angle)
         angle = 180;
         else if(angle<0)
             angle = 0;
-        __HAL_TIM_SetCompare(&htim9, TIM_CHANNEL_2, angle * 2000 / 270 + 500);
-        __HAL_TIM_SetCompare(&htim12, TIM_CHANNEL_1, angle * 2000 / 270 + 500);
+        __HAL_TIM_SetCompare(&htim9, TIM_CHANNEL_2, angle * 2000 / 180 + 500);
+}
+
+
+void Set_pidai_zhuan(int speed)
+{
+    if(speed>100)
+        speed = 100;
+        else if(speed<0)
+            speed = 0;
+        __HAL_TIM_SetCompare(&htim12, TIM_CHANNEL_1, speed * 2000 / 100 + 500);
+}
+
+void pidai_duo_init(void)
+{
+    HAL_TIM_Base_Start(&htim12);
+    HAL_TIM_PWM_Start(&htim12, TIM_CHANNEL_1);
+    Set_pidai_zhuan(0);
 }
