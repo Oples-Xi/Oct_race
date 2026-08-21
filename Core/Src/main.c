@@ -75,8 +75,8 @@ extern RingBuffer_t ringBuffer;	//创建一个ringBuffer的屏幕串口缓冲区
 extern uint8_t tjc_RxBuffer[1];//屏幕串口接收命令位
 
 //状态机变量
-extern int tik;//状态机计时
-extern SystemState_t SystemState;
+//extern int tik;//状态机计时
+//extern SystemState_t SystemState;
 
 //上位机接收变量
 uint8_t readBuffer[10];//上位机接收缓存
@@ -199,7 +199,6 @@ int main(void)
     HAL_UART_Receive_IT(&huart5, LaserRx, 8);
   }
   Laser.Distance_cm = 100;
-  tik = HAL_GetTick();
   HAL_UARTEx_ReceiveToIdle_IT(&huart1, readBuffer, sizeof(readBuffer));
   //Set_dipan_duo(270);
   /* USER CODE END 2 */
@@ -208,15 +207,25 @@ int main(void)
   /* USER CODE BEGIN WHILE */
     while (1)
     {
-      //System_StateMachine();
-      Set_pidai_zhuan(0);
-      HAL_Delay(1999);
-      Set_pidai_zhuan(33);
-      HAL_Delay(999);
-      Set_pidai_zhuan(66);
-      HAL_Delay(999);
-      Set_pidai_zhuan(100);
-      HAL_Delay(999);
+      System_StateMachine();
+
+      //PB14舵机测试
+      // Set_pidai_zhuan(0);
+      // HAL_Delay(3999);
+      // Set_pidai_zhuan(33);
+      // HAL_Delay(2999);
+      // Set_pidai_zhuan(50);
+      // HAL_Delay(999);
+      // Set_pidai_zhuan(66);
+      // HAL_Delay(1999);
+      //Set_pidai_zhuan(100);
+      //HAL_Delay(3999);
+      // Set_pidai_zhuan(50);
+      // HAL_Delay(999);
+      // Set_pidai_zhuan(200);
+      // HAL_Delay(1999);
+      // Set_pidai_zhuan(100);
+      // HAL_Delay(999);
 
       // 调试的时候用串口监控的数据
       // printf("%.2f\r\n",  Motor1_Feedback.total_angle);//马达角度

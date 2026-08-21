@@ -32,9 +32,12 @@ uint8_t shape;//形状
 //放行标志位
 int fang = 0;
 
-SystemState_t SystemState =STATE_RELEASE_ONE;//状态机结构体
-GoodsSlot GoodsTable[MAX_GOODS_TYPE];//马格南盘分类结构体
-int tik = 0;//计时
+SystemState_t SystemState =STATE_INIT;//状态机结构体
+GoodsSlot GoodsTable[MAX_GOODS_TYPE];//马格南盘分类结构体'
+
+int tik = 0;//全局计时
+int motortik = 0;//马达角度累加计时
+int try;//分料机尝试次数
 
 extern float Angle;//main中马达角度
 extern int flag;//main中标志位
@@ -111,41 +114,72 @@ void System_StateMachine(void)
 {
     switch(SystemState)
     {
+        case STATE_INIT://只是初始化位置
+
+            Set_fangxin_duo(0);//放行口默认关闭
+            if(HAL_GetTick()-tik<5000)
+            {
+                Set_pidai_zhuan(100);
+                Set_dipan_duo(HoleAngle[0]);//看着像在自检的转动
+            }
+            if(HAL_GetTick()-tik>5000)
+                Set_dipan_duo(0);//看着像在自检的转动
+            if(HAL_GetTick()-tik>10000)
+            {
+                Angle = -100000;//初始值给这么低是防止超出float的范围
+                Motor1_Feedback.total_angle = -100000;
+                tik = HAL_GetTick();
+                SystemState = STATE_RELEASE_ONE;
+                try = 0;
+            }
+
+            break;
+
         case STATE_RELEASE_ONE://放行一个货物
 
-            if (isCunIn() && fang == 0) // 有存货且没放行过
+
+            if (fang == 0) // 没放行过
             {
-                tik = HAL_GetTick();
                 Set_fangxin_duo(90); // 舵机放行
-                fang = 1;
-            }
-
-            if (!isHuoIn() && HAL_GetTick() - tik < 5000) // 没经过传感器
-            {
-                Angle += 1;
-                Motor_SetTargetAngle(Angle); // 一直转
-            }
-
-            if (!isHuoIn() && HAL_GetTick() - tik > 5000 && fang == 1) // 放行后5s还没经过传感器
-            {
-                if (HAL_GetTick() - tik < 7000)
+                if (HAL_GetTick() - tik > 2000)
                 {
-                    Set_fangxin_duo(0); // 舵机复位
-                    
-                }
-                if (HAL_GetTick() - tik > 7000)
-                {
-                    fang = 0;
+                    tik = HAL_GetTick();
+                    if (isCunIn())
+                    {
+                        Set_fangxin_duo(0);
+                        fang = 1;
+                        try = 0;
+                    }
+                    else
+                    {
+                        try += 1;
+                    }
                 }
             }
 
-            if (isHuoIn() && fang == 1)
+            if (fang == 0)
             {
+                if (try == 2)//第二次尝试结束，转动底盘来制造震动
+                {
+                    if(HAL_GetTick()-tik <4000)
+                    {
+                        Set_dipan_duo(HoleAngle[5]);
+                        HAL_Delay(2000);//这里的不影响程序
+                        Set_dipan_duo(HoleAngle[0]);
+                        HAL_Delay(1500);
+                    }
+                }
+            }
+
+            if (is_1ji_Luo() && fang == 1)
+            {
+                Set_pidai_zhuan(0);//一级停转，防止多放
                 Set_fangxin_duo(0); // 舵机复位
                 flag = 0;
-                fang = 0;
                 SystemState =
                     STATE_WAIT_DISTANCE;
+                fang = 0;
+                try = 0;
             }
         
         break;
@@ -159,13 +193,13 @@ void System_StateMachine(void)
             {
                 HAL_UART_Receive_IT(&huart5, LaserRx, 8);
             }
-        if(Laser.Distance_cm>15.0f && flag==0)/* 等待距离到15cm*/
+        if(Laser.Distance_cm>8.0f && flag==0)/* ！！！！！！！要调！！！！等待距离到8cm*/
         {
             //printf("%.2f\r\n", Angle);
             Angle += 50;
             Motor_SetTargetAngle(Angle);
         }
-        if (Laser.Distance_cm <= 15.0f && flag != 1)
+        if ((Laser.Distance_cm <= 8.0f ||isDaowei()) && flag == 0)
         {
             Angle = Motor1_Feedback.total_angle;
             Motor_SetTargetAngle(Angle);
@@ -186,7 +220,7 @@ void System_StateMachine(void)
             commandLength = Command_GetCommand(command);
             if (commandLength != 0)
             {
-                //2HAL_UART_Transmit(&huart2, command, commandLength, HAL_MAX_DELAY);
+                //HAL_UART_Transmit(&huart2, command, commandLength, HAL_MAX_DELAY);
                 uint8_t color = command[2];
                 uint8_t shape = command[3];
                 // 查找是否已经存在
@@ -225,7 +259,7 @@ void System_StateMachine(void)
             fang = 0;
             tik = HAL_GetTick();
             SystemState =STATE_RELEASE_ONE;
-            Set_dipan_duo(0);
+            Set_dipan_duo(HoleAngle[0]);
         }
         break;
     }

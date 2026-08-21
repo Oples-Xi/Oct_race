@@ -49,20 +49,27 @@ void MX_GPIO_Init(void)
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOF_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
-  /*Configure GPIO pins : fangxing_In_Pin luoxia_In_Pin */
-  GPIO_InitStruct.Pin = fangxing_In_Pin|luoxia_In_Pin;
+  /*Configure GPIO pins : R_1ji_In_Pin L_1ji_In_Pin L_2ji_In_Pin */
+  GPIO_InitStruct.Pin = R_1ji_In_Pin|L_1ji_In_Pin|L_2ji_In_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : cunhuo_In_Pin */
-  GPIO_InitStruct.Pin = cunhuo_In_Pin;
+  /*Configure GPIO pins : cunhuo_In_Pin dingwei_In_Pin */
+  GPIO_InitStruct.Pin = cunhuo_In_Pin|dingwei_In_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(cunhuo_In_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : R_2ji_In_Pin */
+  GPIO_InitStruct.Pin = R_2ji_In_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(R_2ji_In_GPIO_Port, &GPIO_InitStruct);
 
 }
 

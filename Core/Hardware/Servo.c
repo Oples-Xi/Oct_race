@@ -48,7 +48,7 @@ void fangxin_duo_init(void)
 }
 
 /**
- * @brief 粉料机转动
+ * @brief 分料机机转动
  * 
  * @param angle 角度
  */
@@ -62,15 +62,23 @@ void Set_fangxin_duo(int angle)
 }
 
 
+/**
+ * @brief 一级传送带转动
+ * 
+ * @param speed 速度（-100到100）
+ */
 void Set_pidai_zhuan(int speed)
 {
-    if(speed>100)
+    if (speed > 100)
         speed = 100;
-        else if(speed<0)
-            speed = 0;
-        __HAL_TIM_SetCompare(&htim12, TIM_CHANNEL_1, speed * 2000 / 100 + 500);
+        else if(speed< -100)
+            speed = -100;
+        __HAL_TIM_SetCompare(&htim12, TIM_CHANNEL_1, (speed+100) * 2000 / 200 + 500);
 }
 
+/**
+ * 
+ */
 void pidai_duo_init(void)
 {
     HAL_TIM_Base_Start(&htim12);
