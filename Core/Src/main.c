@@ -201,6 +201,7 @@ int main(void)
   Laser.Distance_cm = 100;
   HAL_UARTEx_ReceiveToIdle_IT(&huart1, readBuffer, sizeof(readBuffer));
   //Set_dipan_duo(270);
+  
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -255,12 +256,11 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
-  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
-  RCC_OscInitStruct.PLL.PLLM = 8;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+  RCC_OscInitStruct.PLL.PLLM = 4;
   RCC_OscInitStruct.PLL.PLLN = 168;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 4;
@@ -296,7 +296,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
             huart->ErrorCode = HAL_UART_ERROR_NONE;
         }
         Laser_Parse(LaserRx); // 解析激光数据
-
         /* 重新启动接收（务必检查返回值） */
         if (HAL_UART_Receive_IT(&huart5, LaserRx, 8) != HAL_OK) {
             // 若启动失败，尝试重新初始化UART或进入错误处理

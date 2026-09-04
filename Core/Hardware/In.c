@@ -52,7 +52,6 @@ uint8_t  is_1ji_Luo(void)
             {
                 state = 0; // 切回释放状态
                 count = 0;
-
             }
         }
         else
@@ -127,7 +126,6 @@ uint8_t isCunIn(void)
     if(pin_status != stable_state)
     {
         count++;
-
         if(count >= KEY_DEBOUNCE_COUNT)
         {
             stable_state = pin_status;
@@ -138,8 +136,6 @@ uint8_t isCunIn(void)
     {
         count = 0;
     }
-
-
     return stable_state;
 }
 
@@ -152,14 +148,11 @@ uint8_t isDaowei(void)
 {
     static uint8_t stable_state = 0;
     static uint8_t count = 0;
-
     uint8_t pin_status = IS_daowei();  // 1=有货，0=无货
-
-
     if(pin_status != stable_state)
     {
         count++;
-
+        
         if(count >= KEY_DEBOUNCE_COUNT)
         {
             stable_state = pin_status;

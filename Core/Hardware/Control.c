@@ -25,10 +25,6 @@ int commandLength = 0;
 uint8_t color;//颜色
 uint8_t shape;//形状
 
-//伪代码替代变量
-//uint8_t UpperReady = 0;
-//uint8_t PhotoSensor = 0;
-
 //放行标志位
 int fang = 0;
 
@@ -72,8 +68,7 @@ int Goods_Find(uint8_t color,uint8_t shape)
     {
         if(GoodsTable[i].used)
         {
-            if(GoodsTable[i].color == color &&
-               GoodsTable[i].shape == shape)
+            if(GoodsTable[i].color == color && GoodsTable[i].shape == shape)
             {
                 return i;
             }
@@ -112,7 +107,7 @@ int Goods_Add(uint8_t color,uint8_t shape)
  */
 void System_StateMachine(void)
 {
-    switch(SystemState)
+     switch(SystemState)
     {
         case STATE_INIT://只是初始化位置
 
@@ -125,11 +120,11 @@ void System_StateMachine(void)
             if(HAL_GetTick()-tik>5000)
                 Set_dipan_duo(0);//看着像在自检的转动
             if(HAL_GetTick()-tik>10000)
-            {
+            { 
                 Angle = -100000;//初始值给这么低是防止超出float的范围
                 Motor1_Feedback.total_angle = -100000;
                 tik = HAL_GetTick();
-                SystemState = STATE_RELEASE_ONE;
+                SystemState = STATE_WAIT_DISTANCE;
                 try = 0;
             }
 
@@ -155,10 +150,7 @@ void System_StateMachine(void)
                         try += 1;
                     }
                 }
-            }
 
-            if (fang == 0)
-            {
                 if (try == 2)//第二次尝试结束，转动底盘来制造震动
                 {
                     if(HAL_GetTick()-tik <4000)
@@ -168,6 +160,14 @@ void System_StateMachine(void)
                         Set_dipan_duo(HoleAngle[0]);
                         HAL_Delay(1500);
                     }
+                }
+                else if (try == 3)
+                {
+                    
+                    Set_dipan_duo(270);
+                    HAL_Delay(500);
+                    Set_dipan_duo(0);
+                    HAL_Delay(500);
                 }
             }
 
@@ -195,7 +195,7 @@ void System_StateMachine(void)
             }
         if(Laser.Distance_cm>8.0f && flag==0)/* ！！！！！！！要调！！！！等待距离到8cm*/
         {
-            //printf("%.2f\r\n", Angle);
+            printf("%.2f\r\n", Angle);
             Angle += 50;
             Motor_SetTargetAngle(Angle);
         }
@@ -249,12 +249,11 @@ void System_StateMachine(void)
         case STATE_WAIT_PHOTO:
         if (!isHuoOut())
         {
-            Angle += 50;
-            Motor_SetTargetAngle(Angle);//一直转
+            Angle += 1;
+            Motor_SetTargetAngle(Motor1_Feedback.total_angle);//一直转
         }
         if(isHuoOut())
         {
-            //printf("1");//测试用
             flag = 0;
             fang = 0;
             tik = HAL_GetTick();
